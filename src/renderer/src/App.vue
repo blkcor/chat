@@ -3,6 +3,9 @@ import { ref, watchEffect } from 'vue'
 import ConversationList from './components/ConversationList.vue'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import ChatMessageCard from './components/ChatMessageCard.vue'
+import ChatIcon from './components/icons/ChatIcon.vue'
+import StarIcon from './components/icons/StarIcon.vue'
+import SettingsIcon from './components/icons/SettingsIcon.vue'
 
 // Mock data for conversations
 const conversations = [
@@ -108,11 +111,37 @@ watchEffect(() => {
       当前主题: {{ isDarkMode ? '深色' : '浅色' }}
     </div>
     <header
-      class="px-4 py-3 border-b border-theme flex items-center gap-6 bg-secondary h-[var(--header-height)] flex-shrink-0"
+      class="px-4 py-3 border-b border-theme flex items-center justify-between bg-secondary h-[var(--header-height)] flex-shrink-0"
     >
-      <a href="#" class="no-underline text-secondary font-medium hover:text-accent transition-colors">Link 1</a>
-      <a href="#" class="no-underline text-secondary font-medium hover:text-accent transition-colors">Link 2</a>
-      <a href="#" class="no-underline text-secondary font-medium hover:text-accent transition-colors">Link 3</a>
+      <div class="flex items-center gap-6">
+        <!-- 使用 Logo 文字替代纯文本链接，突出主题色 -->
+        <a href="#" class="text-lg font-bold accent-hover transition-colors">
+          <span class="text-accent">ChatApp</span>
+        </a>
+
+        <div class="flex items-center gap-4">
+          <a href="#" class="nav-link flex items-center gap-1 accent-hover" :class="{'active-link': true}">
+            <ChatIcon class="w-5 h-5" />
+            <span>聊天</span>
+          </a>
+          <a href="#" class="nav-link flex items-center gap-1 accent-hover">
+            <StarIcon class="w-5 h-5" />
+            <span>收藏</span>
+          </a>
+          <a href="#" class="nav-link flex items-center gap-1 accent-hover">
+            <SettingsIcon class="w-5 h-5" />
+            <span>设置</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 右侧 -->
+      <div class="flex items-center">
+        <button class="btn-secondary text-sm px-3 py-1">
+          <span class="inline-block w-2 h-2 rounded-full bg-success mr-1"></span>
+          在线
+        </button>
+      </div>
     </header>
     <main class="flex flex-grow overflow-hidden">
       <aside
@@ -182,4 +211,62 @@ watchEffect(() => {
 </template>
 
 <style scoped>
+.nav-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-normal);
+}
+
+.nav-link:hover {
+  background-color: var(--bg-accent);
+  color: var(--color-primary);
+}
+
+.nav-link.active-link {
+  color: var(--color-primary);
+  background-color: var(--bg-accent);
+  position: relative;
+}
+
+.nav-link.active-link::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+}
+
+/* SVG 图标样式 */
+svg {
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: all var(--transition-normal);
+}
+
+a:hover svg,
+button:hover svg {
+  stroke: var(--color-primary);
+}
+
+.active-link svg {
+  stroke: var(--color-primary);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 </style>

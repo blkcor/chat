@@ -25,11 +25,16 @@
             <div
               v-for="color in themeColors"
               :key="color.name"
-              class="color-option rounded-full w-5 h-5 cursor-pointer border border-theme"
+              class="color-option rounded-full w-6 h-6 cursor-pointer border-2"
+              :class="{'border-accent': isActiveColor(color.value), 'border-theme': !isActiveColor(color.value)}"
               :style="{ backgroundColor: color.value }"
               :title="color.name"
               @click="setCustomColor(color)"
-            ></div>
+            >
+              <div v-if="isActiveColor(color.value)" class="flex items-center justify-center h-full">
+                <div class="w-2 h-2 rounded-full bg-white"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -72,7 +77,13 @@ const toggleTheme = (event: MouseEvent) => {
   emit('click', event);
 };
 
+// 保存当前选择的颜色
+const currentColor = ref('#1967d2'); // 默认蓝色
+
 const setCustomColor = (color: { name: string; value: string }) => {
+  // 更新当前选择的颜色
+  currentColor.value = color.value;
+
   // 设置自定义主题色
   document.documentElement.style.setProperty('--color-primary', color.value);
 
@@ -89,6 +100,14 @@ const setCustomColor = (color: { name: string; value: string }) => {
   } else {
     document.documentElement.style.setProperty('--text-accent', color.value);
   }
+
+  // 保存颜色偏好到本地存储
+  localStorage.setItem('theme-color-preference', color.value);
+};
+
+// 检查是否是当前活动的颜色
+const isActiveColor = (colorValue: string): boolean => {
+  return currentColor.value === colorValue;
 };
 
 // 辅助函数：调整颜色亮度
@@ -111,6 +130,25 @@ function adjustColor(hex: string, percent: number): string {
 watch(isHighContrast, (newValue) => {
   document.documentElement.classList.toggle('high-contrast', newValue);
 });
+
+// 页面加载时恢复保存的主题色
+const loadSavedThemeColor = () => {
+  const savedColor = localStorage.getItem('theme-color-preference');
+  if (savedColor) {
+    const matchedColor = themeColors.find(color => color.value === savedColor);
+    if (matchedColor) {
+      currentColor.value = matchedColor.value;
+      setCustomColor(matchedColor);
+    } else {
+      // 如果保存的颜色不在预定义颜色中，创建一个新的颜色对象
+      const customColor = { name: '自定义', value: savedColor };
+      setCustomColor(customColor);
+    }
+  }
+};
+
+// 在组件挂载时加载保存的主题色
+loadSavedThemeColor();
 </script>
 
 <style scoped>
@@ -121,6 +159,11 @@ watch(isHighContrast, (newValue) => {
 .theme-icon {
   font-size: 1rem;
   margin-left: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-secondary:hover .theme-icon {
+  transform: rotate(360deg);
 }
 
 .theme-checkbox {
@@ -130,10 +173,43 @@ watch(isHighContrast, (newValue) => {
 }
 
 .color-option {
-  transition: transform 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .color-option:hover {
   transform: scale(1.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-option.border-accent {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--color-primary);
+}
+
+.btn-secondary {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-secondary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background-color: var(--color-primary);
+  opacity: 0.1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn-secondary:hover::after {
+  width: 200%;
+  height: 200%;
 }
 </style>

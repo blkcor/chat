@@ -42,13 +42,24 @@ const formatTime = (timestamp: string) => {
   border-radius: var(--border-radius-md);
   background-color: var(--bg-secondary);
   transition: var(--transition-normal);
+  position: relative;
+  border-left: 2px solid transparent;
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--color-secondary);
+}
+
+.chat-message:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .user-message {
   background-color: var(--bg-accent);
   flex-direction: row-reverse;
   text-align: right;
+  border-left: none;
+  border-right: 4px solid var(--color-primary);
 }
+
 
 .avatar {
   width: 2.5rem;
@@ -61,11 +72,14 @@ const formatTime = (timestamp: string) => {
   justify-content: center;
   font-weight: bold;
   flex-shrink: 0;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 0 1px var(--border-color);
 }
 
 .user-avatar {
   background-color: var(--color-primary);
   color: var(--text-on-primary);
+  box-shadow: 0 0 0 1px var(--color-primary-hover);
 }
 
 .message-content {
