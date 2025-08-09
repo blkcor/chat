@@ -155,10 +155,24 @@ html:not(.dark)::view-transition-new(root) {
     transition: var(--transition-normal);
     background-color: var(--color-primary);
     color: var(--text-on-primary);
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(0, 0, 0, 0.05);
   }
 
   .btn-primary:hover {
     background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-primary:active {
+    background-color: var(--color-primary-active);
+    transform: translateY(0);
   }
 
   .btn-secondary {
@@ -197,16 +211,21 @@ html:not(.dark)::view-transition-new(root) {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
   }
 
   .list-item:hover {
     background-color: var(--item-hover-bg);
+    border-left-color: var(--color-primary);
+    border-left-width: 3px;
   }
 
   .list-item.selected {
     background-color: var(--item-selected-bg);
     border-color: var(--item-selected-border);
-    color: var(--text-accent);
+    border-left-color: var(--color-primary);
+    border-left-width: 3px;
   }
 
   /* 布局和背景类 */
@@ -254,5 +273,74 @@ html:not(.dark)::view-transition-new(root) {
 
   .border-theme-focus {
     border-color: var(--border-color-focus);
+  }
+
+  /* 增强主题色应用 */
+  .accent-bg {
+    background-color: var(--color-primary);
+    color: var(--text-on-primary);
+  }
+
+  .accent-border {
+    border-color: var(--color-primary);
+  }
+
+  .accent-hover:hover {
+    color: var(--color-primary-hover);
+  }
+
+  /* 按钮悬浮效果增强 */
+  .btn-primary,
+  .btn-secondary {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .btn-primary::after,
+  .btn-secondary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    z-index: -1;
+    transition:
+      width 0.3s,
+      height 0.3s,
+      opacity 0.3s;
+  }
+
+  .btn-primary:active::after,
+  .btn-secondary:active::after {
+    width: 300px;
+    height: 300px;
+    opacity: 1;
+  }
+
+  /* 带主题色的滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 10px;
+    opacity: 0.7;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-primary-hover);
   }
 }
