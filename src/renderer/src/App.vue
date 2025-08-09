@@ -17,8 +17,11 @@ const toggleDarkMode = (event: MouseEvent) => {
     return
   }
 
+  // 获取鼠标点击时的位置
   const x = event.clientX
   const y = event.clientY
+
+  // 计算从点击位置到屏幕最远角的半径
   const endRadius = Math.hypot(
     Math.max(x, window.innerWidth - x),
     Math.max(y, window.innerHeight - y)
@@ -30,7 +33,9 @@ const toggleDarkMode = (event: MouseEvent) => {
 
   transition.ready.then(() => {
     const clipPath = [
+      // 初始状态：半径为0的圆
       `circle(0px at ${x}px ${y}px)`,
+      // 结束状态：覆盖全屏幕的圆
       `circle(${endRadius}px at ${x}px ${y}px)`
     ]
     document.documentElement.animate(
@@ -54,24 +59,33 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="app-container">
-    <header class="app-header">
-      <a href="#">Link 1</a>
-      <a href="#">Link 2</a>
-      <a href="#">Link 3</a>
+  <div class="flex flex-col h-screen w-screen bg-[var(--bg-color)] text-[var(--font-color)]">
+    <header
+      class="px-4 py-3 border-b border-[var(--border-color)] flex items-center gap-6 bg-[var(--bg-color-secondary)] h-[var(--header-height)] flex-shrink-0"
+    >
+      <a href="#" class="no-underline text-[var(--font-color-secondary)] font-medium">Link 1</a>
+      <a href="#" class="no-underline text-[var(--font-color-secondary)] font-medium">Link 2</a>
+      <a href="#" class="no-underline text-[var(--font-color-secondary)] font-medium">Link 3</a>
     </header>
-    <main class="app-main">
-      <aside class="sidebar">
-        <div class="sidebar-content">
+    <main class="flex flex-grow overflow-hidden">
+      <aside
+        class="w-[var(--sidebar-width)] flex-shrink-0 border-r border-[var(--border-color)] bg-[var(--bg-color-tertiary)] flex flex-col justify-between"
+      >
+        <div class="p-4 overflow-y-auto">
           <ConversationList :items="conversations" />
         </div>
-        <footer class="sidebar-footer">
-          <button @click="toggleDarkMode" class="theme-toggle-btn">
+        <footer class="p-4 border-t border-[var(--border-color)]">
+          <button
+            @click="toggleDarkMode"
+            class="w-full p-2 border border-[var(--border-color)] rounded-md bg-[var(--bg-color-secondary)] text-[var(--font-color)] cursor-pointer transition-colors hover:bg-[var(--item-hover-bg)]"
+          >
             {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
           </button>
         </footer>
       </aside>
-      <section class="chat-area">
+      <section
+        class="flex-grow p-6 overflow-y-auto flex flex-col items-center justify-center text-center text-[var(--font-color-secondary)]"
+      >
         <h1>Chat Area</h1>
         <p>Select a conversation to start chatting.</p>
       </section>
@@ -80,82 +94,4 @@ watchEffect(() => {
 </template>
 
 <style scoped>
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  background-color: var(--bg-color);
-  color: var(--font-color);
-}
-
-.app-header {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  background-color: var(--bg-color-secondary);
-  height: var(--header-height);
-  flex-shrink: 0;
-}
-
-.app-header a {
-  text-decoration: none;
-  color: var(--font-color-secondary);
-  font-weight: 500;
-}
-
-.app-main {
-  display: flex;
-  flex-grow: 1;
-  overflow: hidden;
-}
-
-.sidebar {
-  width: var(--sidebar-width);
-  flex-shrink: 0;
-  border-right: 1px solid var(--border-color);
-  background-color: var(--bg-color-tertiary);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.sidebar-content {
-  padding: 1rem;
-  overflow-y: auto;
-}
-
-.sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.theme-toggle-btn {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background-color: var(--bg-color-secondary);
-  color: var(--font-color);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.theme-toggle-btn:hover {
-  background-color: var(--item-hover-bg);
-}
-
-.chat-area {
-  flex-grow: 1;
-  padding: 1.5rem;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--font-color-secondary);
-}
 </style>

@@ -1,15 +1,15 @@
 <template>
-  <div class="conversation-list-container">
-    <ul class="conversation-list">
+  <div>
+    <ul class="list-none p-0 m-0 flex flex-col gap-2">
       <li
         v-for="item in items"
         :key="item.id"
-        class="conversation-item"
-        :class="{ 'selected': selectedConversationId === item.id }"
+        class="px-3 py-4 rounded-2 cursor-pointer transition-colors duration-200 ease-in-out border-[1px] border-[var(--border-color)] bg-[var(--bg-color)] hover:bg-[var(--item-hover-bg)]"
+        :class="{ 'bg-[var(--item-selected-bg)] border-[var(--item-selected-border)]': selectedConversationId === item.id }"
         @click="selectConversation(item.id)"
       >
-        <h3 class="item-title">{{ item.title }}</h3>
-        <p class="item-details">Model: {{ item.selectedModel }}</p>
+        <h3 :class="['text-[0.9rem] font-medium mx-0 mt-1 mb-0 text-[var(--font-color)]', { 'text-[var(--font-color-accent)]': selectedConversationId === item.id }]">{{ item.title }}</h3>
+        <p :class="['text-[0.75rem] m-0', { 'text-[var(--font-color-accent)]': selectedConversationId === item.id }]">Model: {{ item.selectedModel }}</p>
       </li>
     </ul>
   </div>
@@ -33,48 +33,5 @@ const selectConversation = (id: number) => {
 </script>
 
 <style scoped>
-.conversation-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
 
-.conversation-item {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-color);
-}
-
-.conversation-item:hover {
-  background-color: var(--item-hover-bg);
-}
-
-.conversation-item.selected {
-  background-color: var(--item-selected-bg);
-  border-color: var(--item-selected-border);
-}
-
-.item-title {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin: 0 0 0.25rem 0;
-  color: var(--font-color);
-}
-
-.item-details {
-  font-size: 0.75rem;
-  color: var(--font-color-secondary);
-  margin: 0;
-}
-
-.conversation-item.selected .item-title,
-.conversation-item.selected .item-details {
-  color: var(--font-color-accent);
-}
 </style>
