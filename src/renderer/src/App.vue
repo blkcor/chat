@@ -13,11 +13,13 @@ const conversations = [
 const isDarkMode = ref(false)
 
 const toggleDarkMode = (event: MouseEvent) => {
-  // 不在这里改变isDarkMode的值，因为现在是由ThemeSwitcher组件控制
-  // 而是只处理过渡动画
+  // 获取当前isDarkMode的值，以便在动画中使用正确的顺序
+  const shouldBeDark = !isDarkMode.value
 
   // Check for View Transitions API support
   if (!document.startViewTransition) {
+    // 如果不支持View Transitions API，直接切换主题
+    isDarkMode.value = shouldBeDark
     return
   }
 
@@ -31,10 +33,13 @@ const toggleDarkMode = (event: MouseEvent) => {
     Math.max(y, window.innerHeight - y)
   )
 
+  // 创建过渡动画，在回调中切换主题
   const transition = document.startViewTransition(() => {
-    // 这里什么也不做，因为isDarkMode的值已经被ThemeSwitcher改变了
+    // 在过渡中更改isDarkMode的值，确保与动画同步
+    isDarkMode.value = shouldBeDark
   })
 
+  // 动画准备就绪后，添加自定义动画
   transition.ready.then(() => {
     const clipPath = [
       // 初始状态：半径为0的圆
@@ -44,12 +49,12 @@ const toggleDarkMode = (event: MouseEvent) => {
     ]
     document.documentElement.animate(
       {
-        clipPath: isDarkMode.value ? clipPath : [...clipPath].reverse()
+        clipPath: shouldBeDark ? clipPath : [...clipPath].reverse()
       },
       {
         duration: 500,
         easing: 'ease-in-out',
-        pseudoElement: isDarkMode.value
+        pseudoElement: shouldBeDark
           ? '::view-transition-new(root)'
           : '::view-transition-old(root)'
       }

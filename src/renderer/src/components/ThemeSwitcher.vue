@@ -68,6 +68,7 @@ const themeColors = [
 ];
 
 const toggleTheme = (event: MouseEvent) => {
+  // 只触发事件，现在切换逻辑完全由父组件处理
   emit('click', event);
 };
 

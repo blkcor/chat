@@ -11,6 +11,10 @@ body,
   overflow: hidden; /* Important: Prevents the body itself from scrolling */
 }
 
+/*
+  优化主题切换动画
+  修复模式过渡时的混合模式和叠加顺序
+*/
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -18,8 +22,8 @@ body,
 }
 
 /*
-  When transitioning TO light mode (from dark), we want to see the OLD (dark) view shrinking.
-  To do this, we must place the NEW (light) view underneath the old one.
+  当切换到浅色模式时，我们希望看到深色模式逐渐收缩
+  为此，我们需要将浅色模式置于深色模式之下
 */
 html:not(.dark)::view-transition-new(root) {
   z-index: -1;
