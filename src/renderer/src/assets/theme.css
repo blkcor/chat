@@ -1,0 +1,35 @@
+/* /src/renderer/src/assets/theme.css */
+:root {
+  --font-color: #3c4043;
+  --font-color-secondary: #5f6368;
+  --font-color-accent: #1967d2;
+
+  --bg-color: #fff;
+  --bg-color-secondary: #f7f7f7;
+  --bg-color-tertiary: #fcfcfc;
+
+  --border-color: #e0e0e0;
+
+  --sidebar-width: 280px;
+  --header-height: 50px;
+
+  --item-hover-bg: #f5f5f5;
+  --item-selected-bg: #e8f0fe;
+  --item-selected-border: #d2e3fc;
+}
+
+html.dark {
+  --font-color: #e8eaed;
+  --font-color-secondary: #969ba1;
+  --font-color-accent: #8ab4f8;
+
+  --bg-color: #202124;
+  --bg-color-secondary: #292a2d;
+  --bg-color-tertiary: #252629;
+
+  --border-color: #3c4043;
+
+  --item-hover-bg: #2f3033;
+  --item-selected-bg: #28354a;
+  --item-selected-border: #3c4043;
+}

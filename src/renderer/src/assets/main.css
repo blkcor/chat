@@ -1,1 +1,24 @@
-@import 'tailwindcss';
+/* /src/renderer/src/assets/main.css */
+
+/* CSS Reset to remove default browser margins and prevent scrolling */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Important: Prevents the body itself from scrolling */
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/*
+  When transitioning TO light mode (from dark), we want to see the OLD (dark) view shrinking.
+  To do this, we must place the NEW (light) view underneath the old one.
+*/
+html:not(.dark)::view-transition-new(root) {
+  z-index: -1;
+}
