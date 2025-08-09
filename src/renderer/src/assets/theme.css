@@ -1,35 +1,84 @@
 /* /src/renderer/src/assets/theme.css */
-:root {
-  --font-color: #3c4043;
-  --font-color-secondary: #5f6368;
-  --font-color-accent: #1967d2;
+/* 这个文件现在主要用于提供一些主题相关的工具类和特定组件的样式 */
 
-  --bg-color: #fff;
-  --bg-color-secondary: #f7f7f7;
-  --bg-color-tertiary: #fcfcfc;
-
-  --border-color: #e0e0e0;
-
-  --sidebar-width: 280px;
-  --header-height: 50px;
-
-  --item-hover-bg: #f5f5f5;
-  --item-selected-bg: #e8f0fe;
-  --item-selected-border: #d2e3fc;
+/* 主题特定的覆盖类 */
+.theme-override-light {
+  /* 可以在这里覆盖特定组件在浅色模式下的样式 */
+  --custom-component-bg: #f0f0f0;
+  --custom-component-text: #333333;
 }
 
-html.dark {
-  --font-color: #e8eaed;
-  --font-color-secondary: #969ba1;
-  --font-color-accent: #8ab4f8;
+.theme-override-dark {
+  /* 可以在这里覆盖特定组件在深色模式下的样式 */
+  --custom-component-bg: #383838;
+  --custom-component-text: #e0e0e0;
+}
 
-  --bg-color: #202124;
-  --bg-color-secondary: #292a2d;
-  --bg-color-tertiary: #252629;
+/* 主题相关的工具类 */
+.theme-text-primary {
+  color: var(--text-primary);
+}
 
-  --border-color: #3c4043;
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
 
-  --item-hover-bg: #2f3033;
-  --item-selected-bg: #28354a;
-  --item-selected-border: #3c4043;
+.theme-text-accent {
+  color: var(--text-accent);
+}
+
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-bg-accent {
+  background-color: var(--bg-accent);
+}
+
+.theme-border {
+  border: 1px solid var(--border-color);
+}
+
+/* 主题过渡动画 */
+.theme-transition {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* 深色模式文本调整 */
+.dark .prose {
+  color: var(--text-primary);
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+  color: var(--text-primary);
+}
+
+.dark .prose a {
+  color: var(--text-accent);
+}
+
+/* 可访问性增强 - 高对比度模式 */
+.high-contrast {
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --bg-primary: #ffffff;
+  --border-color: #000000;
+}
+
+.dark.high-contrast {
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --bg-primary: #000000;
+  --border-color: #ffffff;
 }
