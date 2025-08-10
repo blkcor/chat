@@ -1,19 +1,20 @@
 <template>
-  <div class="theme-switch" ref="rootEl">
-    <button class="btn-secondary flex items-center justify-between px-3 py-2 w-full" @click="toggleTheme">
-      <span>{{ isDarkTheme ? '切换为浅色模式' : '切换为深色模式' }}</span>
-      <span class="theme-icon">{{ isDarkTheme ? '🌞' : '🌙' }}</span>
+  <div class="flex items-center gap-2 text-nowrap">
+    <button class="flex items-center justify-between px-3 py-2 w-full" @click="toggleTheme">
+      <span :class="[isDarkTheme ? 'icon-[basil--sun-outline]' : 'icon-[tabler--moon]', 'w-5 h-5 cursor-pointer']" />
     </button>
 
-    <button @click="toggleAdvancedOptions"
-      class="text-[0.75rem] text-[var(--text-secondary)] mt-2 hover:text-[var(--text-accent)] focus:outline-none">
-      {{ showAdvancedOptions ? '隐藏高级选项' : '显示高级选项' }}
+    <button @click="toggleAdvancedOptions" ref="toggleButton"
+      class="text-[0.75rem] text-secondary hover:text-[var(--text-accent)] focus:outline-none cursor-pointer">
+      {{ showAdvancedOptions ? '隐藏高级选项' : '高级选项' }}
     </button>
 
-    <div v-if="showAdvancedOptions" class="theme-advanced-popover" @click.stop>
+    <div v-if="showAdvancedOptions" ref="advancePanel"
+      class="mt-1 z-10 absolute top-[var(--header-height)] right-0 bg-primary border-[1px] border-solid border-[var(--border-color)] rounded-md shadow-[0 4px 24px rgba(0,0,0,0.12)] p-1"
+      @click.stop>
       <div class="flex flex-col gap-2">
         <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" v-model="isHighContrast" class="theme-checkbox" />
+          <input type="checkbox" v-model="isHighContrast" class="w-4 h-4 accent-primary" />
           <span>高对比度模式</span>
         </label>
 
@@ -21,8 +22,8 @@
           <span class="text-[0.75rem] text-secondary">主题色</span>
           <div class="flex gap-2 mt-1">
             <div v-for="color in themeColors" :key="color.name"
-              class="color-option rounded-full w-6 h-6 cursor-pointer border-2"
-              :class="{ 'border-accent': isActiveColor(color.value), 'border-theme': !isActiveColor(color.value) }"
+              class="transition-all duration-200 shadow-[0 2px 4px rgba(0,0,0,0.1)] hover:scale-[1.2] hover:shadow-[0 4px 8px rgba(0,0,0,0.2)] rounded-full w-6 h-6 cursor-pointer border-2"
+              :class="{ 'scale-[1.1] shadow-[0 0 2px var(--bg-primary), 0 0 0 4px var(--color-primary)]': isActiveColor(color.value), 'border-theme': !isActiveColor(color.value) }"
               :style="{ backgroundColor: color.value }" :title="color.name" @click="setCustomColor(color)">
               <div v-if="isActiveColor(color.value)" class="flex items-center justify-center h-full">
                 <div class="w-2 h-2 rounded-full bg-white"></div>
@@ -36,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, useTemplateRef } from 'vue';
 
 const props = defineProps<{
   isDarkTheme: boolean;
@@ -48,10 +49,12 @@ const emit = defineEmits<{
 }>();
 
 const showAdvancedOptions = ref(false);
-const rootEl = ref<HTMLElement | null>(null);
+const advancePanelRef = useTemplateRef("advancePanel");
+const toggleButtonRef = useTemplateRef("toggleButton");
+
 // 点击外部关闭高级设置
 function handleClickOutside(e: MouseEvent) {
-  if (showAdvancedOptions.value && rootEl.value && !rootEl.value.contains(e.target as Node)) {
+  if (showAdvancedOptions.value && advancePanelRef.value && !advancePanelRef.value.contains(e.target as Node) && toggleButtonRef.value && !toggleButtonRef.value.contains(e.target as Node)) {
     showAdvancedOptions.value = false;
   }
 }
@@ -156,76 +159,3 @@ const loadSavedThemeColor = () => {
 // 在组件挂载时加载保存的主题色
 loadSavedThemeColor();
 </script>
-
-<style scoped>
-.theme-switcher {
-  width: 100%;
-}
-
-.theme-advanced-popover {
-  position: absolute;
-  top: 110%;
-  right: 0;
-  min-width: 220px;
-  z-index: 1000;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-  padding: 1rem;
-  margin-top: 0.25rem;
-}
-
-.theme-icon {
-  font-size: 1rem;
-  margin-left: 0.5rem;
-  transition: transform 0.3s ease;
-}
-
-.theme-checkbox {
-  width: 1rem;
-  height: 1rem;
-  accent-color: var(--color-primary);
-}
-
-.color-option {
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.color-option:hover {
-  transform: scale(1.2);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.color-option.border-accent {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--color-primary);
-}
-
-.btn-secondary {
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-secondary::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background-color: var(--color-primary);
-  opacity: 0.1;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.4s ease, height 0.4s ease;
-}
-
-.btn-secondary:hover::after {
-  width: 200%;
-  height: 200%;
-}
-</style>

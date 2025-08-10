@@ -121,10 +121,6 @@ watchEffect(() => {
 
 <template>
   <div class="flex flex-col h-screen w-screen bg-primary text-primary">
-    <!-- 调试信息，可以在生产环境中移除 -->
-    <div v-if="false" class="fixed top-0 right-0 bg-primary p-2 text-xs border border-theme z-50">
-      当前主题: {{ isDarkMode ? '深色' : '浅色' }}
-    </div>
     <header
       class="px-4 py-3 border-b border-theme flex items-center justify-between bg-secondary h-[var(--header-height)] flex-shrink-0">
       <div class="flex items-center gap-6">
@@ -141,6 +137,7 @@ watchEffect(() => {
         <ThemeSwitcher :isDarkTheme="isDarkMode" @update:isDarkTheme="isDarkMode = $event" @click="toggleDarkMode" />
       </div>
     </header>
+
     <main class="flex flex-grow overflow-hidden">
       <aside
         class="w-[var(--sidebar-width)] flex-shrink-0 border-r border-theme bg-tertiary flex flex-col justify-between">
