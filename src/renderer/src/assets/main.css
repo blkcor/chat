@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin "@iconify/tailwind4";
 
 /* CSS Reset to remove default browser margins and prevent scrolling */
 html,

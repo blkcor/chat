@@ -3,9 +3,7 @@ import { ref, watchEffect } from 'vue'
 import ConversationList from './components/ConversationList.vue'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import ChatMessageCard from './components/ChatMessageCard.vue'
-import ChatIcon from './components/icons/ChatIcon.vue'
-import StarIcon from './components/icons/StarIcon.vue'
-import SettingsIcon from './components/icons/SettingsIcon.vue'
+import Header from './components/Header.vue'
 
 // Mock data for conversations
 const conversations = [
@@ -111,28 +109,14 @@ watchEffect(() => {
       当前主题: {{ isDarkMode ? '深色' : '浅色' }}
     </div>
     <header
-      class="px-4 py-3 border-b border-theme flex items-center justify-between bg-secondary h-[var(--header-height)] flex-shrink-0"
-    >
+      class="px-4 py-3 border-b border-theme flex items-center justify-between bg-secondary h-[var(--header-height)] flex-shrink-0">
       <div class="flex items-center gap-6">
         <!-- 使用 Logo 文字替代纯文本链接，突出主题色 -->
         <a href="#" class="text-lg font-bold accent-hover transition-colors">
           <span class="text-accent">ChatApp</span>
         </a>
 
-        <div class="flex items-center gap-4">
-          <a href="#" class="nav-link flex items-center gap-1 accent-hover" :class="{'active-link': true}">
-            <ChatIcon class="w-5 h-5" />
-            <span>聊天</span>
-          </a>
-          <a href="#" class="nav-link flex items-center gap-1 accent-hover">
-            <StarIcon class="w-5 h-5" />
-            <span>收藏</span>
-          </a>
-          <a href="#" class="nav-link flex items-center gap-1 accent-hover">
-            <SettingsIcon class="w-5 h-5" />
-            <span>设置</span>
-          </a>
-        </div>
+        <Header />
       </div>
 
       <!-- 右侧 -->
@@ -145,22 +129,15 @@ watchEffect(() => {
     </header>
     <main class="flex flex-grow overflow-hidden">
       <aside
-        class="w-[var(--sidebar-width)] flex-shrink-0 border-r border-theme bg-tertiary flex flex-col justify-between"
-      >
+        class="w-[var(--sidebar-width)] flex-shrink-0 border-r border-theme bg-tertiary flex flex-col justify-between">
         <div class="p-4 overflow-y-auto">
           <ConversationList :items="conversations" />
         </div>
         <footer class="p-4 border-t border-theme">
-          <ThemeSwitcher
-            :isDarkTheme="isDarkMode"
-            @update:isDarkTheme="isDarkMode = $event"
-            @click="toggleDarkMode"
-          />
+          <ThemeSwitcher :isDarkTheme="isDarkMode" @update:isDarkTheme="isDarkMode = $event" @click="toggleDarkMode" />
         </footer>
       </aside>
-      <section
-        class="flex-grow flex flex-col relative"
-      >
+      <section class="flex-grow flex flex-col relative">
         <div v-if="conversations.length === 0" class="flex items-center justify-center h-full">
           <div class="card p-6 max-w-md text-center">
             <h1 class="text-primary text-xl font-medium mb-2">开始聊天</h1>
@@ -179,25 +156,14 @@ watchEffect(() => {
           <div class="flex-grow overflow-y-auto p-6 pb-32">
             <div class="max-w-3xl mx-auto w-full">
               <div class="chat-messages">
-                <ChatMessageCard
-                  content="你好，我能帮你什么忙吗？"
-                  timestamp="2025-08-09T12:00:00"
-                  :is-user-message="false"
-                  model="AI助手"
-                />
+                <ChatMessageCard content="你好，我能帮你什么忙吗？" timestamp="2025-08-09T12:00:00" :is-user-message="false"
+                  model="AI助手" />
 
-                <ChatMessageCard
-                  content="我想了解一下如何使用暗色模式和浅色模式。"
-                  timestamp="2025-08-09T12:01:00"
-                  :is-user-message="true"
-                />
+                <ChatMessageCard content="我想了解一下如何使用暗色模式和浅色模式。" timestamp="2025-08-09T12:01:00"
+                  :is-user-message="true" />
 
-                <ChatMessageCard
-                  content="您现在正在使用的应用已经支持了暗色和浅色模式切换。您可以通过点击左下角的切换按钮来更改主题。此外，系统还会自动检测您的系统偏好设置，并相应地应用主题。"
-                  timestamp="2025-08-09T12:02:00"
-                  :is-user-message="false"
-                  model="AI助手"
-                />
+                <ChatMessageCard content="您现在正在使用的应用已经支持了暗色和浅色模式切换。您可以通过点击左下角的切换按钮来更改主题。此外，系统还会自动检测您的系统偏好设置，并相应地应用主题。"
+                  timestamp="2025-08-09T12:02:00" :is-user-message="false" model="AI助手" />
               </div>
             </div>
           </div>
@@ -206,14 +172,12 @@ watchEffect(() => {
           <div class="chat-input-container">
             <div class="max-w-3xl mx-auto w-full px-6">
               <div class="card p-3 flex items-center shadow-lg message-input-card">
-                <input
-                  type="text"
-                  placeholder="输入消息..."
-                  class="flex-grow bg-transparent border-none outline-none text-primary message-input"
-                />
+                <input type="text" placeholder="输入消息..."
+                  class="flex-grow bg-transparent border-none outline-none text-primary message-input" />
                 <button class="btn-primary ml-2 py-1 px-4 flex items-center">
                   <span>发送</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                   </svg>
@@ -282,9 +246,17 @@ button:hover svg {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 聊天输入框容器样式 */
