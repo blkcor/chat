@@ -28,7 +28,9 @@ const providers: Array<Provider> = [
   }
 ]
 
-const isDarkMode = ref(false)
+const isDarkMode = ref<boolean>(false)
+const modelValue = ref<string>('')
+const startMessage = ref<boolean>(false)
 
 const toggleDarkMode = (event: MouseEvent) => {
   // 获取当前isDarkMode的值，以便在动画中使用正确的顺序
@@ -80,6 +82,14 @@ const toggleDarkMode = (event: MouseEvent) => {
   })
 }
 
+const handleStartChat = () => {
+  // 校验参数
+  console.log("当前选择的模型是:", modelValue.value)
+  if (modelValue.value) {
+    startMessage.value = true
+  }
+}
+
 // 检测系统主题偏好和保存用户主题偏好
 const checkSystemPreference = () => {
   // 首先检查本地存储中是否有用户的主题偏好
@@ -117,6 +127,8 @@ watchEffect(() => {
   // 更新DOM类
   document.documentElement.classList.toggle('dark', isDarkMode.value)
 })
+
+
 </script>
 
 <template>
@@ -132,7 +144,6 @@ watchEffect(() => {
         <Header />
       </div>
 
-      <!-- 右侧 ThemeSwitcher -->
       <div class="flex items-center">
         <ThemeSwitcher :isDarkTheme="isDarkMode" @update:isDarkTheme="isDarkMode = $event" @click="toggleDarkMode" />
       </div>
@@ -144,20 +155,20 @@ watchEffect(() => {
         <div class="p-4 overflow-y-auto">
           <ConversationList :items="conversations" />
         </div>
-        <footer class="p-4 border-t border-theme flex items-center justify-between">
+        <!-- <footer class="p-4 border-t border-theme flex items-center justify-between">
           <button class="btn-secondary text-sm px-3 py-1">
-            <span class="inline-block w-2 h-2 rounded-full bg-success mr-1"></span>
-            在线
+            <span class="inline-block w-2 h-2 rounded-full bg-success mr-1">1人在线</span>
           </button>
-        </footer>
+        </footer> -->
       </aside>
       <section class="flex-grow flex flex-col relative">
-        <div v-if="conversations.length !== 0" class="flex items-center justify-center h-full">
-          <ProviderSelect :providers="providers" />
+        <div v-if="!startMessage" class="flex  items-center justify-center h-full gap-2">
+          <ProviderSelect v-model="modelValue" :providers="providers" />
+          <button @click="handleStartChat" class="btn-primary  cursor-pointer">开始对话吧!</button>
         </div>
 
         <!-- TODO: 如果选中了conversation 加载并展示  否则展示模型选择下拉框 下面的内容需要封装组件-->
-        <div v-if="false" class="flex flex-col h-full">
+        <div v-else class="flex flex-col h-full">
           <!-- 标题部分 -->
           <div class="p-4 border-b border-theme bg-secondary">
             <h1 class="text-xl font-medium text-primary">{{ conversations[0].title }}</h1>

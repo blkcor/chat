@@ -19,12 +19,13 @@ import {
 import { Provider } from '../types/provider'
 
 defineProps<{ providers: Array<Provider> }>()
+const model = defineModel<string>()
 
 const isOpenMenu = ref(false)
 </script>
 
 <template>
-  <SelectRoot v-model:open="isOpenMenu">
+  <SelectRoot v-model:open="isOpenMenu" v-model="model">
     <!-- 触发器 -->
     <SelectTrigger class="inline-flex min-w-[220px] items-center justify-between rounded-xl px-4 py-2 text-sm
              bg-gradient-to-br from-primary to-secondary border border-border-color
