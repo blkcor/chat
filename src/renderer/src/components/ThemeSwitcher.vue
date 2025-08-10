@@ -1,9 +1,6 @@
 <template>
   <div class="theme-switch">
-    <button
-      class="btn-secondary flex items-center justify-between px-3 py-2 w-full"
-      @click="toggleTheme"
-    >
+    <button class="btn-secondary flex items-center justify-between px-3 py-2 w-full" @click="toggleTheme">
       <span>{{ isDarkTheme ? '切换为浅色模式' : '切换为深色模式' }}</span>
       <span class="theme-icon">{{ isDarkTheme ? '🌞' : '🌙' }}</span>
     </button>
@@ -11,26 +8,17 @@
     <div class="theme-options mt-4" v-if="showAdvancedOptions">
       <div class="flex flex-col gap-2">
         <label class="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            v-model="isHighContrast"
-            class="theme-checkbox"
-          />
+          <input type="checkbox" v-model="isHighContrast" class="theme-checkbox" />
           <span>高对比度模式</span>
         </label>
 
         <div class="theme-colors mt-2">
           <span class="text-[0.75rem] text-secondary">主题色</span>
           <div class="flex gap-2 mt-1">
-            <div
-              v-for="color in themeColors"
-              :key="color.name"
+            <div v-for="color in themeColors" :key="color.name"
               class="color-option rounded-full w-6 h-6 cursor-pointer border-2"
-              :class="{'border-accent': isActiveColor(color.value), 'border-theme': !isActiveColor(color.value)}"
-              :style="{ backgroundColor: color.value }"
-              :title="color.name"
-              @click="setCustomColor(color)"
-            >
+              :class="{ 'border-accent': isActiveColor(color.value), 'border-theme': !isActiveColor(color.value) }"
+              :style="{ backgroundColor: color.value }" :title="color.name" @click="setCustomColor(color)">
               <div v-if="isActiveColor(color.value)" class="flex items-center justify-center h-full">
                 <div class="w-2 h-2 rounded-full bg-white"></div>
               </div>
@@ -40,10 +28,8 @@
       </div>
     </div>
 
-    <button
-      @click="showAdvancedOptions = !showAdvancedOptions"
-      class="text-[0.75rem] text-[var(--text-secondary)] mt-2 hover:text-[var(--text-accent)] focus:outline-none"
-    >
+    <button @click="showAdvancedOptions = !showAdvancedOptions"
+      class="text-[0.75rem] text-[var(--text-secondary)] mt-2 hover:text-[var(--text-accent)] focus:outline-none">
       {{ showAdvancedOptions ? '隐藏高级选项' : '显示高级选项' }}
     </button>
   </div>
@@ -162,10 +148,6 @@ loadSavedThemeColor();
   font-size: 1rem;
   margin-left: 0.5rem;
   transition: transform 0.3s ease;
-}
-
-.btn-secondary:hover .theme-icon {
-  transform: rotate(360deg);
 }
 
 .theme-checkbox {
