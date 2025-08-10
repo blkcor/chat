@@ -27,8 +27,9 @@
 
         <div class="flex items-center mt-1">
           <div
-            class="w-2 h-2 rounded-full mr-1.5"
-            :class="selectedConversationId === item.id ? 'accent-bg' : 'bg-secondary'"
+            class="w-2 h-2 rounded-full mr-1.5 transition-colors"
+            :class="selectedConversationId === item.id ? 'bg-primary' : 'bg-muted'"
+            :style="selectedConversationId === item.id ? { backgroundColor: 'var(--color-primary)' } : { backgroundColor: 'var(--text-muted)' }"
           ></div>
           <p class="text-[0.75rem] m-0 truncate"
              :class="selectedConversationId === item.id ? 'text-accent' : 'text-secondary'">

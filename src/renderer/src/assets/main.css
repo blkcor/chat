@@ -33,44 +33,44 @@ html:not(.dark)::view-transition-new(root) {
 @layer base {
   :root {
     /* 主题颜色 - Colors */
-    --color-primary: #1967d2;
-    --color-primary-hover: #1a73e8;
-    --color-primary-active: #174ea6;
-    --color-secondary: #5f6368;
-    --color-success: #188038;
-    --color-warning: #e37400;
-    --color-danger: #c5221f;
-    --color-info: #1a73e8;
+    --color-primary: #4f7fde;
+    --color-primary-hover: #6690e3;
+    --color-primary-active: #3c6bd8;
+    --color-secondary: #6b7280;
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-danger: #ef4444;
+    --color-info: #3b82f6;
 
     /* 文本颜色 - Text Colors */
-    --text-primary: #3c4043;
-    --text-secondary: #5f6368;
-    --text-muted: #80868b;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
     --text-accent: var(--color-primary);
     --text-on-primary: #ffffff;
     --text-on-secondary: #ffffff;
 
     /* 背景颜色 - Background Colors */
     --bg-primary: #ffffff;
-    --bg-secondary: #f7f7f7;
-    --bg-tertiary: #fcfcfc;
-    --bg-accent: #e8f0fe;
+    --bg-secondary: #f9fafb;
+    --bg-tertiary: #f3f4f6;
+    --bg-accent: #eff6ff;
 
     /* 边框颜色 - Border Colors */
-    --border-color: #e0e0e0;
-    --border-color-hover: #dadce0;
+    --border-color: #e5e7eb;
+    --border-color-hover: #d1d5db;
     --border-color-focus: var(--color-primary);
 
     /* 交互状态颜色 - Interactive States */
-    --item-hover-bg: #f5f5f5;
-    --item-active-bg: #e8f0fe;
-    --item-selected-bg: #e8f0fe;
-    --item-selected-border: #d2e3fc;
+    --item-hover-bg: #f3f4f6;
+    --item-active-bg: #eff6ff;
+    --item-selected-bg: #eff6ff;
+    --item-selected-border: #dbeafe;
 
     /* 阴影 - Shadows */
-    --shadow-sm: 0 1px 2px rgba(60, 64, 67, 0.1);
-    --shadow-md: 0 2px 4px rgba(60, 64, 67, 0.1);
-    --shadow-lg: 0 4px 8px rgba(60, 64, 67, 0.1);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
     /* 尺寸 - Dimensions */
     --sidebar-width: 280px;
@@ -88,44 +88,44 @@ html:not(.dark)::view-transition-new(root) {
 
   .dark {
     /* 主题颜色 - Colors */
-    --color-primary: #8ab4f8;
-    --color-primary-hover: #aecbfa;
-    --color-primary-active: #669df6;
-    --color-secondary: #9aa0a6;
-    --color-success: #81c995;
-    --color-warning: #fdd663;
-    --color-danger: #f28b82;
-    --color-info: #8ab4f8;
+    --color-primary: #60a5fa;
+    --color-primary-hover: #93c5fd;
+    --color-primary-active: #3b82f6;
+    --color-secondary: #9ca3af;
+    --color-success: #34d399;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+    --color-info: #60a5fa;
 
     /* 文本颜色 - Text Colors */
-    --text-primary: #e8eaed;
-    --text-secondary: #9aa0a6;
-    --text-muted: #80868b;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
     --text-accent: var(--color-primary);
-    --text-on-primary: #202124;
-    --text-on-secondary: #202124;
+    --text-on-primary: #111827;
+    --text-on-secondary: #111827;
 
     /* 背景颜色 - Background Colors */
-    --bg-primary: #202124;
-    --bg-secondary: #2d2e30;
-    --bg-tertiary: #35363a;
-    --bg-accent: #28354a;
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-tertiary: #374151;
+    --bg-accent: #1e3a8a;
 
     /* 边框颜色 - Border Colors */
-    --border-color: #5f6368;
-    --border-color-hover: #80868b;
+    --border-color: #374151;
+    --border-color-hover: #4b5563;
     --border-color-focus: var(--color-primary);
 
     /* 交互状态颜色 - Interactive States */
-    --item-hover-bg: #2d2e30;
-    --item-active-bg: #28354a;
-    --item-selected-bg: #28354a;
-    --item-selected-border: #3c4043;
+    --item-hover-bg: #1f2937;
+    --item-active-bg: #1e3a8a;
+    --item-selected-bg: #1e3a8a;
+    --item-selected-border: #1d4ed8;
 
     /* 阴影 - Shadows */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   /* 为了兼容旧代码，保留旧变量但指向新变量 */

@@ -65,11 +65,13 @@ const showAdvancedOptions = ref(false);
 const isHighContrast = ref(false);
 
 const themeColors = [
-  { name: '蓝色', value: '#1967d2' },
-  { name: '紫色', value: '#8e24aa' },
-  { name: '绿色', value: '#0f9d58' },
-  { name: '红色', value: '#d93025' },
-  { name: '橙色', value: '#e37400' }
+  { name: '温和蓝', value: '#4f7fde' },
+  { name: '薰衣紫', value: '#8b5cf6' },
+  { name: '翠绿色', value: '#10b981' },
+  { name: '珊瑚红', value: '#f43f5e' },
+  { name: '琥珀橙', value: '#f59e0b' },
+  { name: '青色', value: '#06b6d4' },
+  { name: '玫瑰色', value: '#ec4899' }
 ];
 
 const toggleTheme = (event: MouseEvent) => {
@@ -78,7 +80,7 @@ const toggleTheme = (event: MouseEvent) => {
 };
 
 // 保存当前选择的颜色
-const currentColor = ref('#1967d2'); // 默认蓝色
+const currentColor = ref('#4f7fde'); // 默认温和蓝色
 
 const setCustomColor = (color: { name: string; value: string }) => {
   // 更新当前选择的颜色

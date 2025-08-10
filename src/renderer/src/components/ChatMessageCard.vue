@@ -36,16 +36,15 @@ const formatTime = (timestamp: string) => {
 <style scoped>
 .chat-message {
   display: flex;
-  padding: 1rem;
+  padding: 1.25rem;
   gap: 1rem;
-  margin-bottom: 1rem;
-  border-radius: var(--border-radius-md);
+  margin-bottom: 1.5rem;
+  border-radius: var(--border-radius-lg);
   background-color: var(--bg-secondary);
   transition: var(--transition-normal);
   position: relative;
-  border-left: 2px solid transparent;
+  border-left: 3px solid var(--color-secondary);
   box-shadow: var(--shadow-sm);
-  border-left: 4px solid var(--color-secondary);
 }
 
 .chat-message:hover {
@@ -57,7 +56,7 @@ const formatTime = (timestamp: string) => {
   flex-direction: row-reverse;
   text-align: right;
   border-left: none;
-  border-right: 4px solid var(--color-primary);
+  border-right: 3px solid var(--color-primary);
 }
 
 

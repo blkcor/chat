@@ -70,15 +70,17 @@
 
 /* 可访问性增强 - 高对比度模式 */
 .high-contrast {
-  --text-primary: #000000;
-  --text-secondary: #333333;
+  --text-primary: #1a202c;
+  --text-secondary: #2d3748;
   --bg-primary: #ffffff;
-  --border-color: #000000;
+  --border-color: #2d3748;
+  --color-primary: #2b6cb0;
 }
 
 .dark.high-contrast {
-  --text-primary: #ffffff;
-  --text-secondary: #cccccc;
-  --bg-primary: #000000;
-  --border-color: #ffffff;
+  --text-primary: #f7fafc;
+  --text-secondary: #e2e8f0;
+  --bg-primary: #1a202c;
+  --border-color: #e2e8f0;
+  --color-primary: #63b3ed;
 }
