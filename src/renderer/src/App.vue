@@ -153,9 +153,7 @@ watchEffect(() => {
       </aside>
       <section class="flex-grow flex flex-col relative">
         <div v-if="conversations.length !== 0" class="flex items-center justify-center h-full">
-          <div class="card p-6 max-w-md text-center">
-            <ProviderSelect :providers="providers" />
-          </div>
+          <ProviderSelect :providers="providers" />
         </div>
 
         <!-- TODO: 如果选中了conversation 加载并展示  否则展示模型选择下拉框 下面的内容需要封装组件-->
