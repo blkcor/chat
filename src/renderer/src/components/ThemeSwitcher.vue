@@ -1,11 +1,16 @@
 <template>
-  <div class="theme-switch">
+  <div class="theme-switch" ref="rootEl">
     <button class="btn-secondary flex items-center justify-between px-3 py-2 w-full" @click="toggleTheme">
       <span>{{ isDarkTheme ? '切换为浅色模式' : '切换为深色模式' }}</span>
       <span class="theme-icon">{{ isDarkTheme ? '🌞' : '🌙' }}</span>
     </button>
 
-    <div class="theme-options mt-4" v-if="showAdvancedOptions">
+    <button @click="toggleAdvancedOptions"
+      class="text-[0.75rem] text-[var(--text-secondary)] mt-2 hover:text-[var(--text-accent)] focus:outline-none">
+      {{ showAdvancedOptions ? '隐藏高级选项' : '显示高级选项' }}
+    </button>
+
+    <div v-if="showAdvancedOptions" class="theme-advanced-popover" @click.stop>
       <div class="flex flex-col gap-2">
         <label class="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" v-model="isHighContrast" class="theme-checkbox" />
@@ -27,16 +32,11 @@
         </div>
       </div>
     </div>
-
-    <button @click="showAdvancedOptions = !showAdvancedOptions"
-      class="text-[0.75rem] text-[var(--text-secondary)] mt-2 hover:text-[var(--text-accent)] focus:outline-none">
-      {{ showAdvancedOptions ? '隐藏高级选项' : '显示高级选项' }}
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 
 const props = defineProps<{
   isDarkTheme: boolean;
@@ -48,6 +48,24 @@ const emit = defineEmits<{
 }>();
 
 const showAdvancedOptions = ref(false);
+const rootEl = ref<HTMLElement | null>(null);
+// 点击外部关闭高级设置
+function handleClickOutside(e: MouseEvent) {
+  if (showAdvancedOptions.value && rootEl.value && !rootEl.value.contains(e.target as Node)) {
+    showAdvancedOptions.value = false;
+  }
+}
+
+function toggleAdvancedOptions() {
+  showAdvancedOptions.value = !showAdvancedOptions.value;
+}
+
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('mousedown', handleClickOutside);
+});
 const isHighContrast = ref(false);
 
 const themeColors = [
@@ -142,6 +160,20 @@ loadSavedThemeColor();
 <style scoped>
 .theme-switcher {
   width: 100%;
+}
+
+.theme-advanced-popover {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  min-width: 220px;
+  z-index: 1000;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  padding: 1rem;
+  margin-top: 0.25rem;
 }
 
 .theme-icon {

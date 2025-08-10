@@ -4,11 +4,28 @@ import ConversationList from './components/ConversationList.vue'
 import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import ChatMessageCard from './components/ChatMessageCard.vue'
 import Header from './components/Header.vue'
-
+import ProviderSelect from './components/ProviderSelect.vue'
+import { Provider } from './types/provider'
 // Mock data for conversations
 const conversations = [
   { id: 1, title: 'Conversation 1', selectedModel: 'Model A', createdAt: '2023-01-01', updatedAt: '2023-01-02', providerId: 1 },
   { id: 2, title: 'Conversation 2', selectedModel: 'Model B', createdAt: '2023-01-03', updatedAt: '2023-01-04', providerId: 2 }
+]
+
+const providers: Array<Provider> = [
+  {
+    id: 1,
+    name: "OpenAI",
+    title: "你不知道opneai?",
+    desc: "OpenAI是一个人工智能研究实验室，致力于推动数字智能的边界。",
+    avatar: "https://openai.com/favicon.ico",
+    createdAt: '2023-01-01',
+    updatedAt: '2023-01-02',
+    models: [
+      "GPT5",
+      "GPT-4o"
+    ]
+  }
 ]
 
 const isDarkMode = ref(false)
@@ -119,12 +136,9 @@ watchEffect(() => {
         <Header />
       </div>
 
-      <!-- 右侧 -->
+      <!-- 右侧 ThemeSwitcher -->
       <div class="flex items-center">
-        <button class="btn-secondary text-sm px-3 py-1">
-          <span class="inline-block w-2 h-2 rounded-full bg-success mr-1"></span>
-          在线
-        </button>
+        <ThemeSwitcher :isDarkTheme="isDarkMode" @update:isDarkTheme="isDarkMode = $event" @click="toggleDarkMode" />
       </div>
     </header>
     <main class="flex flex-grow overflow-hidden">
@@ -133,20 +147,22 @@ watchEffect(() => {
         <div class="p-4 overflow-y-auto">
           <ConversationList :items="conversations" />
         </div>
-        <footer class="p-4 border-t border-theme">
-          <ThemeSwitcher :isDarkTheme="isDarkMode" @update:isDarkTheme="isDarkMode = $event" @click="toggleDarkMode" />
+        <footer class="p-4 border-t border-theme flex items-center justify-between">
+          <button class="btn-secondary text-sm px-3 py-1">
+            <span class="inline-block w-2 h-2 rounded-full bg-success mr-1"></span>
+            在线
+          </button>
         </footer>
       </aside>
       <section class="flex-grow flex flex-col relative">
-        <div v-if="conversations.length === 0" class="flex items-center justify-center h-full">
+        <div v-if="conversations.length !== 0" class="flex items-center justify-center h-full">
           <div class="card p-6 max-w-md text-center">
-            <h1 class="text-primary text-xl font-medium mb-2">开始聊天</h1>
-            <p>没有对话记录，请开始新的对话</p>
-            <button class="btn-primary mt-4">新建对话</button>
+            <ProviderSelect :providers="providers" />
           </div>
         </div>
 
-        <div v-else class="flex flex-col h-full">
+        <!-- TODO: 如果选中了conversation 加载并展示  否则展示模型选择下拉框 下面的内容需要封装组件-->
+        <div v-if="false" class="flex flex-col h-full">
           <!-- 标题部分 -->
           <div class="p-4 border-b border-theme bg-secondary">
             <h1 class="text-xl font-medium text-primary">{{ conversations[0].title }}</h1>
@@ -174,13 +190,9 @@ watchEffect(() => {
               <div class="card p-3 flex items-center shadow-lg message-input-card">
                 <input type="text" placeholder="输入消息..."
                   class="flex-grow bg-transparent border-none outline-none text-primary message-input" />
-                <button class="btn-primary ml-2 py-1 px-4 flex items-center">
+                <button class="btn-primary ml-2 py-1 px-4 flex items-center gap-1">
                   <span>发送</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
+                  <span class="icon-[ri--send-plane-line] w-5 h-5"></span>
                 </button>
               </div>
             </div>
