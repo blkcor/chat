@@ -23,80 +23,19 @@
     </div>
 
     <div class="flex items-center">
-      <ThemeSwitcher :isDarkTheme="isDarkMode" @update:isDarkTheme="isDarkMode = $event" @click="toggleDarkMode" />
+      <ThemeSwitcher :isDarkTheme="isDarkMode" @click="toggleDarkMode" />
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import ThemeSwitcher from './ThemeSwitcher.vue';
 
-const isDarkMode = ref<boolean>(false)
+defineProps<{
+  isDarkMode: boolean
+  toggleDarkMode: (event: MouseEvent) => void
+}>()
 
-// 检测系统主题偏好和保存用户主题偏好
-const checkSystemPreference = () => {
-  const savedTheme = localStorage.getItem('theme-preference')
-  if (savedTheme) {
-    isDarkMode.value = savedTheme === 'dark'
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    isDarkMode.value = true
-  }
-}
-
-// 初始化主题
-checkSystemPreference()
-
-const toggleDarkMode = (event: MouseEvent) => {
-  const shouldBeDark = !isDarkMode.value
-
-  // 保存用户偏好到本地存储
-  localStorage.setItem('theme-preference', shouldBeDark ? 'dark' : 'light')
-
-  // 更新DOM类
-  document.documentElement.classList.toggle('dark', shouldBeDark)
-
-  // Check for View Transitions API support
-  if (!document.startViewTransition) {
-    isDarkMode.value = shouldBeDark
-    return
-  }
-
-  // 获取鼠标点击时的位置
-  const x = event.clientX
-  const y = event.clientY
-
-  // 计算从点击位置到屏幕最远角的半径
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
-  )
-
-  // 创建过渡动画，在回调中切换主题
-  const transition = document.startViewTransition(() => {
-    isDarkMode.value = shouldBeDark
-  })
-
-  // 动画准备就绪后，添加自定义动画
-  transition.ready.then(() => {
-    const clipPath = [
-      `circle(0px at ${x}px ${y}px)`,
-      `circle(${endRadius}px at ${x}px ${y}px)`
-    ]
-    document.documentElement.animate(
-      {
-        clipPath: shouldBeDark ? clipPath : [...clipPath].reverse()
-      },
-      {
-        duration: 500,
-        easing: 'ease-in-out',
-        pseudoElement: shouldBeDark
-          ? '::view-transition-new(root)'
-          : '::view-transition-old(root)'
-      }
-    )
-  })
-}
 </script>
 
 <style scoped>
