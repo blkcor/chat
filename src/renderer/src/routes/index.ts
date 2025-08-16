@@ -6,6 +6,10 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/home.vue')
   },
   {
+    path: '/setting',
+    component: () => import('../views/setting.vue')
+  },
+  {
     path: '/conversation/:id',
     component: () => import('../views/conversation.vue')
   }

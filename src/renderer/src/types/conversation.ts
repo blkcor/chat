@@ -1,8 +1,8 @@
 export interface Conversation {
-  id: number
+  id: string
   title: string
   selectedModel: string
   createdAt: string
   updatedAt: string
-  providerId: number
+  providerId: string
 }

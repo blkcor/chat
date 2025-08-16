@@ -14,7 +14,7 @@ const modelValue = ref<string>('')
 // 暂时hardcode一下 应该从api拉
 const providers: Array<Provider> = [
   {
-    id: 1,
+    id: '0x4ffsadasdadsadasdas',
     name: "OpenAI",
     title: "你不知道opneai?",
     desc: "OpenAI是一个人工智能研究实验室，致力于推动数字智能的边界。",

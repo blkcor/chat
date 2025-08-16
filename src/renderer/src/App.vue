@@ -5,8 +5,22 @@ import { useTheme } from './composables/useTheme'
 
 // Mock data for conversations
 const conversations = [
-  { id: 1, title: 'Conversation 1', selectedModel: 'Model A', createdAt: '2023-01-01', updatedAt: '2023-01-02', providerId: 1 },
-  { id: 2, title: 'Conversation 2', selectedModel: 'Model B', createdAt: '2023-01-03', updatedAt: '2023-01-04', providerId: 2 }
+  {
+    id: 'adadsadasda',
+    title: 'Conversation 1',
+    selectedModel: 'Model A',
+    createdAt: '2023-01-01',
+    updatedAt: '2023-01-02',
+    providerId: 'dasdasdasd'
+  },
+  {
+    id: 'dasdasdas',
+    title: 'Conversation 2',
+    selectedModel: 'Model B',
+    createdAt: '2023-01-03',
+    updatedAt: '2023-01-04',
+    providerId: 'dasdasdasda'
+  }
 ]
 
 // 使用主题组合式函数，自动初始化主题
