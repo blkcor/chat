@@ -8,7 +8,7 @@
     <!-- 消息列表部分 - 使用flex-grow使其填充可用空间，底部增加足够的padding防止被输入框遮挡 -->
     <div class="flex-grow overflow-y-auto p-6 pb-32">
       <div class="max-w-3xl mx-auto w-full">
-        <div class="chat-messages">
+        <div class="flex flex-col gap-4">
           <ChatMessageCard
             content="你好，我能帮你什么忙吗？"
             timestamp="2025-08-09T12:00:00"
@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { Conversation } from '@renderer/types/conversation'
+import ChatMessageCard from '../components/ChatMessageCard.vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()

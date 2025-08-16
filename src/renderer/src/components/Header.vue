@@ -11,7 +11,7 @@
         <router-link
           to="/"
           class="nav-link flex items-center gap-1 accent-hover"
-          :class="{ 'active-link': true }"
+          :class="{ 'active-link': currentTab === Tab.HOME }"
         >
           <span class="icon-[hugeicons--chat-bot] w-5 h-5"></span>
           <span>聊天</span>
@@ -20,7 +20,11 @@
           <span class="icon-[flowbite--life-saver-solid] w-5 h-5 "></span>
           <span>收藏</span>
         </a> -->
-        <router-link to="/setting" class="nav-link flex items-center gap-1 accent-hover">
+        <router-link
+          to="/setting"
+          class="nav-link flex items-center gap-1 accent-hover"
+          :class="{ 'active-link': currentTab === Tab.SETTING }"
+        >
           <span class="icon-[lets-icons--setting-line] w-5 h-5"></span>
           <span>设置</span>
         </router-link>
@@ -35,6 +39,23 @@
 
 <script setup lang="ts">
 import ThemeSwitcher from './ThemeSwitcher.vue'
+import { useRoute } from 'vue-router'
+import { ref, watch } from 'vue'
+import { Tab } from '@renderer/constants/tab'
+
+const currentTab = ref<Tab>(Tab.HOME)
+
+const route = useRoute()
+watch(
+  () => route.fullPath,
+  (newPath) => {
+    if (newPath.includes('setting')) {
+      currentTab.value = Tab.SETTING
+    } else {
+      currentTab.value = Tab.HOME
+    }
+  }
+)
 
 defineProps<{
   isDarkMode: boolean
