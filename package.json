@@ -26,7 +26,8 @@
     "@tailwindcss/vite": "^4.1.11",
     "electron-updater": "^6.3.9",
     "radix-vue": "^1.9.17",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
@@ -49,6 +50,7 @@
     "vue-eslint-parser": "^10.2.0",
     "vue-tsc": "^3.0.3"
   },
+  "packageManager": "pnpm",
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron",
