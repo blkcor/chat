@@ -42,31 +42,31 @@ export const useTheme = (options: ThemeOptions = { initOnMounted: true }) => {
     // 保存用户偏好到本地存储
     localStorage.setItem('theme-preference', shouldBeDark ? 'dark' : 'light')
 
-    // 更新DOM类
-    document.documentElement.classList.toggle('dark', shouldBeDark)
-
     // 检查浏览器是否支持 View Transitions API
-    // @ts-ignore - View Transitions API 可能在 TypeScript 类型定义中不存在
     if (!document.startViewTransition) {
+      // 直接更新状态和DOM类，不使用动画
       isDarkMode.value = shouldBeDark
+      document.documentElement.classList.toggle('dark', shouldBeDark)
       return
     }
 
-    // 获取鼠标点击时的位置
-    const x = event.clientX
-    const y = event.clientY
-
-    // 计算从点击位置到屏幕最远角的半径
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    )
-
     try {
+      // 获取鼠标点击时的位置
+      const x = event.clientX
+      const y = event.clientY
+
+      // 计算从点击位置到屏幕最远角的半径
+      const endRadius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      )
+
       // 创建过渡动画，在回调中切换主题
-      // @ts-ignore - View Transitions API 可能在 TypeScript 类型定义中不存在
-      const transition = document.startViewTransition(() => {
+      const transition = document.startViewTransition(async () => {
+        // 先更新状态
         isDarkMode.value = shouldBeDark
+        // 然后更新DOM类
+        document.documentElement.classList.toggle('dark', shouldBeDark)
       })
 
       // 动画准备就绪后，添加自定义动画
@@ -76,7 +76,9 @@ export const useTheme = (options: ThemeOptions = { initOnMounted: true }) => {
             `circle(0px at ${x}px ${y}px)`,
             `circle(${endRadius}px at ${x}px ${y}px)`
           ]
-          document.documentElement.animate(
+
+          // 创建动画
+          const animation = document.documentElement.animate(
             {
               clipPath: shouldBeDark ? clipPath : [...clipPath].reverse()
             },
@@ -88,16 +90,18 @@ export const useTheme = (options: ThemeOptions = { initOnMounted: true }) => {
                 : '::view-transition-old(root)'
             }
           )
+
+          return animation.finished // 返回动画完成的Promise
         })
         .catch((error) => {
-          console.error('动画过渡出错:', error)
-          // 确保即使动画失败，主题状态也会更新
+          console.error('主题切换动画错误:', error)
           isDarkMode.value = shouldBeDark
+          document.documentElement.classList.toggle('dark', shouldBeDark)
         })
     } catch (error) {
       console.error('View Transitions API 错误:', error)
-      // 如果 API 调用失败，确保主题状态仍然更新
       isDarkMode.value = shouldBeDark
+      document.documentElement.classList.toggle('dark', shouldBeDark)
     }
   }
 
