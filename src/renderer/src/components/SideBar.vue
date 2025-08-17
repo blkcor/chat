@@ -7,7 +7,7 @@
 
     <!-- 对话列表区域 -->
     <div class="sidebar-content">
-      <ConversationList :items="conversations" :active="conversationId" />
+      <ConversationList :items="conversationStore.conversations" :active="conversationId" />
     </div>
 
     <!-- 底部新对话按钮 -->
@@ -21,11 +21,11 @@
 </template>
 
 <script setup lang="ts">
-import { Conversation } from '@renderer/types/conversation';
 import ConversationList from './ConversationList.vue';
 import { useRoute, useRouter } from 'vue-router'
 import { watch, ref } from 'vue';
 import { Tab } from '@renderer/constants/tab';
+import { useConversationStore } from '@renderer/stores';
 
 const route = useRoute()
 const router = useRouter()
@@ -46,9 +46,8 @@ const createNewChat = () => {
   router.push('/')
 }
 
-defineProps<{
-  conversations: Conversation[]
-}>()
+// 使用 Pinia store
+const conversationStore = useConversationStore()
 </script>
 
 <style scoped>

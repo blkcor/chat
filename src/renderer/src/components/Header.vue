@@ -7,17 +7,18 @@
           <div class="logo-icon">
             <span class="icon-[hugeicons--chat-bot] w-6 h-6"></span>
           </div>
-          <span class="logo-text">ChatApp</span>
+          <span class="logo-text">CHAT</span>
         </div>
 
         <!-- 导航区域 -->
         <nav class="nav-section">
-          <router-link to="/" class="nav-item" :class="{ 'nav-item--active': currentTab === Tab.HOME }">
+          <router-link to="/" class="nav-item" :class="{ 'nav-item--active': appStore.currentTab === Tab.HOME }">
             <span class="nav-item__icon icon-[hugeicons--chat-bot] w-4 h-4"></span>
             <span class="nav-item__text">聊天</span>
           </router-link>
 
-          <router-link to="/setting" class="nav-item" :class="{ 'nav-item--active': currentTab === Tab.SETTING }">
+          <router-link to="/setting" class="nav-item"
+            :class="{ 'nav-item--active': appStore.currentTab === Tab.SETTING }">
             <span class="nav-item__icon icon-[lets-icons--setting-line] w-4 h-4"></span>
             <span class="nav-item__text">设置</span>
           </router-link>
@@ -26,7 +27,7 @@
 
       <!-- 右侧控制区域 -->
       <div class="controls-section">
-        <ThemeSwitcher :isDarkTheme="isDarkMode" @click="toggleDarkMode" />
+        <ThemeSwitcher :isDarkTheme="themeStore.isDarkMode" @click="themeStore.toggleDarkMode" />
       </div>
     </div>
   </header>
@@ -35,27 +36,26 @@
 <script setup lang="ts">
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import { useRoute } from 'vue-router'
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import { Tab } from '@renderer/constants/tab'
+import { useThemeStore, useAppStore } from '@renderer/stores'
 
-const currentTab = ref<Tab>(Tab.HOME)
+// 使用 Pinia stores
+const themeStore = useThemeStore()
+const appStore = useAppStore()
 
 const route = useRoute()
 watch(
   () => route.fullPath,
   (newPath) => {
     if (newPath.includes('setting')) {
-      currentTab.value = Tab.SETTING
+      appStore.setCurrentTab(Tab.SETTING)
     } else {
-      currentTab.value = Tab.HOME
+      appStore.setCurrentTab(Tab.HOME)
     }
-  }
+  },
+  { immediate: true }
 )
-
-defineProps<{
-  isDarkMode: boolean
-  toggleDarkMode: (event: MouseEvent) => void
-}>()
 </script>
 
 <style scoped>

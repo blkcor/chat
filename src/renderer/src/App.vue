@@ -1,29 +1,31 @@
 <script setup lang="ts">
 import SideBar from './components/SideBar.vue'
 import Header from './components/Header.vue'
-import { useTheme } from './composables/useTheme'
-import { onMounted, ref } from 'vue'
-import { db, initProvider } from './stores/db'
-import { Conversation } from './types/conversation'
+import { onMounted } from 'vue'
+import { initProvider } from './stores/db'
+import { useThemeStore, useConversationStore } from './stores'
 
-// 使用主题组合式函数，自动初始化主题
-const { isDarkMode, toggleDarkMode } = useTheme()
-const conversations = ref<Conversation[]>([])
+// 使用 Pinia stores
+const themeStore = useThemeStore()
+const conversationStore = useConversationStore()
 
 onMounted(async () => {
+  // 初始化主题
+  themeStore.initTheme()
+
   // 初始化providers
   await initProvider()
-  // 获取conversationList
-  const conversationList = await db.conversations.toArray()
-  conversations.value = conversationList
+
+  // 加载对话列表
+  await conversationStore.loadConversations()
 })
 </script>
 
 <template>
   <div class="app-container">
-    <Header :isDarkMode="isDarkMode" :toggleDarkMode="toggleDarkMode" class="app-header" />
+    <Header class="app-header" />
     <main class="app-main">
-      <SideBar :conversations="conversations" />
+      <SideBar />
       <section class="app-content">
         <router-view />
       </section>

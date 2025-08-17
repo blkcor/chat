@@ -14,7 +14,7 @@
               </div>
               <div class="message-count">
                 <span class="icon-[ri--message-3-line] w-3.5 h-3.5"></span>
-                <span>{{ messageList.length }} 条消息</span>
+                <span>{{ conversationStore.messageList.length }} 条消息</span>
               </div>
               <div class="last-active" v-if="currentConversation?.updatedAt">
                 <span class="icon-[ri--time-line] w-3.5 h-3.5"></span>
@@ -43,7 +43,7 @@
       </div>
 
       <!-- 状态指示器 -->
-      <div class="conversation-status" v-if="messageStatus === MessageStatus.STREAMING">
+      <div class="conversation-status" v-if="conversationStore.messageStatus === MessageStatus.STREAMING">
         <div class="status-indicator">
           <div class="typing-dots">
             <span></span>
@@ -59,11 +59,12 @@
     <div ref="messagesContainer" class="flex-grow overflow-y-auto px-4 py-6 pb-36">
       <div class="max-w-4xl mx-auto w-full">
         <div class="flex flex-col gap-6">
-          <ChatMessageCard v-for="message in sortedMessages" :key="message.id" :content="message.content"
-            :timestamp="message.createdAt" :is-user-message="message.type === MessageType.QUESTION"
-            :model="currentConversation?.selectedModel" :status="message.status"
-            :is-streaming="streamingMessageId === message.id && messageStatus === MessageStatus.STREAMING"
-            :message-id="message.id" @typing-complete="onMessageTypingComplete" />
+          <ChatMessageCard v-for="message in conversationStore.sortedMessages" :key="message.id"
+            :content="message.content" :timestamp="message.createdAt"
+            :is-user-message="message.type === MessageType.QUESTION"
+            :model="conversationStore.currentConversation?.selectedModel" :status="message.status"
+            :is-streaming="conversationStore.streamingMessageId === message.id" :message-id="message.id"
+            @typing-complete="conversationStore.onTypingComplete" />
         </div>
       </div>
     </div>
@@ -76,9 +77,9 @@
             <input type="text" placeholder="输入消息..." @keyup.enter="handleSend" v-model="messageContent"
               class="message-input" />
             <button @click="handleSend" class="send-button"
-              :disabled="!messageContent.trim() && messageStatus !== MessageStatus.STREAMING">
+              :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING">
               <span
-                :class="messageStatus !== MessageStatus.STREAMING ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
+                :class="conversationStore.messageStatus !== MessageStatus.STREAMING ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
                 class="w-5 h-5" />
             </button>
           </div>
@@ -90,46 +91,25 @@
 
 <script setup lang="ts">
 import ChatMessageCard from '../components/ChatMessageCard.vue'
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { db } from '@renderer/stores/db';
 import { useRoute, useRouter } from 'vue-router';
-import { Conversation } from '@renderer/types/conversation';
-import { Message, MessageStatus, MessageType } from '@renderer/types/message';
-import { generateMessageId } from '@renderer/utils/idUtils'
-import { formatDateTimeWithMs, nowWithMs, getTimeAgo } from '@renderer/utils/dateUtils';
+import { MessageStatus, MessageType } from '@renderer/types/message';
+import { nowWithMs, getTimeAgo } from '@renderer/utils/dateUtils';
 import { StreamableData } from '@type/message';
+import { useConversationStore } from '@renderer/stores';
 
 const route = useRoute()
 const convertsationId = route.params.id as string
-const currentConversation = ref<Conversation>()
-const messageList = ref<Message[]>([])
 const messageContent = ref<string>('')
 const router = useRouter()
 const messagesContainer = ref<HTMLElement>()
-const messageStatus = ref<MessageStatus>(MessageStatus.LOADING)
-const streamingMessageId = ref<string | null>(null) // 当前正在流式输出的消息ID
 
-// 计算属性：确保消息按时间排序，使用更精确的排序逻辑
-const sortedMessages = computed(() => {
-  return [...messageList.value].sort((a, b) => {
-    const timeA = new Date(a.createdAt).getTime()
-    const timeB = new Date(b.createdAt).getTime()
+// 使用 Pinia store
+const conversationStore = useConversationStore()
 
-    // 如果时间戳相同，使用消息类型排序（问题在前，答案在后）
-    if (timeA === timeB) {
-      if (a.type === MessageType.QUESTION && b.type === MessageType.ANSWER) {
-        return -1
-      }
-      if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
-        return 1
-      }
-      // 如果类型也相同，使用ID排序确保稳定性
-      return a.id.localeCompare(b.id)
-    }
-
-    return timeA - timeB
-  })
-})
+// 使用 store 中的计算属性
+const { sortedMessages, currentConversation, messageList, messageStatus, streamingMessageId } = conversationStore
 
 // 滚动到底部
 const scrollToBottom = async () => {
@@ -142,16 +122,15 @@ const scrollToBottom = async () => {
 // 对话操作方法
 const clearConversation = async () => {
   if (confirm('确定要清空这个对话吗？此操作不可撤销。')) {
-    await db.messages.where('conversationId').equals(convertsationId).delete()
-    messageList.value = []
+    await conversationStore.clearConversation(convertsationId)
   }
 }
 
 const exportConversation = () => {
   const conversationData = {
-    title: currentConversation.value?.title,
-    model: currentConversation.value?.selectedModel,
-    messages: sortedMessages.value.map(msg => ({
+    title: conversationStore.currentConversation?.title,
+    model: conversationStore.currentConversation?.selectedModel,
+    messages: conversationStore.sortedMessages.map(msg => ({
       type: msg.type === MessageType.QUESTION ? 'user' : 'assistant',
       content: msg.content,
       timestamp: msg.createdAt
@@ -163,7 +142,7 @@ const exportConversation = () => {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${currentConversation.value?.title || '对话'}.json`
+  a.download = `${conversationStore.currentConversation?.title || '对话'}.json`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -179,183 +158,88 @@ const toggleSettings = () => {
   console.log('打开对话设置')
 }
 
-// 处理消息打字完成事件
-const onMessageTypingComplete = (messageId: string) => {
-  // 如果完成的是当前流式消息，清除流式状态
-  if (streamingMessageId.value === messageId) {
-    streamingMessageId.value = null
-  }
-}
-
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
 
-  messageStatus.value = MessageStatus.STREAMING
-
-  // 生成精确的时间戳，确保问题和答案有不同的时间
-  const questionTime = formatDateTimeWithMs(nowWithMs())
-  const questionMessage: Message = {
-    id: generateMessageId(),
-    conversationId: convertsationId,
-    content: messageContent.value,
-    createdAt: questionTime,
-    updatedAt: questionTime,
-    type: MessageType.QUESTION
-  }
-
-  // 通知主线程
-  const providerInfo = await db.providers.where({ id: currentConversation.value?.providerId }).first()
-  if (!providerInfo) {
-    alert('无效的provider')
-    return
-  }
-
-  db.messages.add(questionMessage)
-  messageList.value.push(questionMessage)
+  const content = messageContent.value
   messageContent.value = ''
 
-  // 滚动到底部显示新消息
-  scrollToBottom()
+  try {
+    // 创建用户消息
+    const questionMessage = await conversationStore.createMessage(content, convertsationId)
 
-  // 等待一毫秒确保时间戳不同
-  await new Promise(resolve => setTimeout(resolve, 1))
+    // 滚动到底部显示新消息
+    scrollToBottom()
 
-  // 创建answer消息，确保时间戳晚于问题消息
-  const answerTime = formatDateTimeWithMs(nowWithMs())
-  const streamingMessage: Message = {
-    id: generateMessageId(),
-    conversationId: convertsationId,
-    content: '',
-    createdAt: answerTime,
-    updatedAt: answerTime,
-    type: MessageType.ANSWER,
-    status: MessageStatus.LOADING
+    // 创建流式回复消息
+    const streamingMessage = await conversationStore.createStreamingMessage(convertsationId)
+
+    // 再次滚动到底部显示loading消息
+    scrollToBottom()
+
+    // 获取provider信息
+    const providerInfo = await db.providers.where({ id: conversationStore.currentConversation?.providerId }).first()
+    if (!providerInfo) {
+      alert('无效的provider')
+      return
+    }
+
+    // 发送消息到主进程
+    window.chatAPI.sendQuestion({
+      content: questionMessage.content,
+      providerName: providerInfo?.name || '',
+      model: conversationStore.currentConversation?.selectedModel || '',
+      messageId: streamingMessage.id
+    })
+  } catch (error) {
+    console.error('Failed to send message:', error)
+    alert('发送消息失败')
   }
-  db.messages.add(streamingMessage)
-  messageList.value.push(streamingMessage)
-
-  // 设置当前流式消息ID
-  streamingMessageId.value = streamingMessage.id
-
-  // 再次滚动到底部显示loading消息
-  scrollToBottom()
-
-  window.chatAPI.sendQuestion({
-    content: questionMessage.content,
-    providerName: providerInfo?.name || '',
-    model: currentConversation.value?.selectedModel || '',
-    messageId: streamingMessage.id
-  })
-
 }
 
 
 onMounted(async () => {
-  const convertsation = await db.conversations.get({
-    id: convertsationId
-  })
-  if (!convertsation) {
-    alert('会话不存在')
-    router.push('/')
-  } else {
-    currentConversation.value = convertsation
-    // 使用复合排序：先按时间，再按类型（问题在前）
-    const messages = await db.messages
-      .where('conversationId')
-      .equals(convertsationId)
-      .toArray()
-
-    // 手动排序以确保精确性
-    messageList.value = messages.sort((a, b) => {
-      const timeA = new Date(a.createdAt).getTime()
-      const timeB = new Date(b.createdAt).getTime()
-
-      // 如果时间戳相同，问题排在答案前面
-      if (timeA === timeB) {
-        if (a.type === MessageType.QUESTION && b.type === MessageType.ANSWER) {
-          return -1
-        }
-        if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
-          return 1
-        }
-        return a.id.localeCompare(b.id)
-      }
-
-      return timeA - timeB
-    })
+  try {
+    // 加载对话
+    await conversationStore.loadConversation(convertsationId)
 
     // 加载完消息后滚动到底部
     scrollToBottom()
+  } catch (error) {
+    console.error('Failed to load conversation:', error)
+    alert('会话不存在')
+    router.push('/')
   }
 
+  // 监听流式消息
   window.chatAPI.streamMessage(async (data: StreamableData) => {
-    // 找到对应的消息并更新内容
-    const messageIndex = messageList.value.findIndex(msg => msg.id === data.messageId)
-    if (messageIndex !== -1) {
-      const message = messageList.value[messageIndex]
+    await conversationStore.updateStreamingMessage(
+      data.messageId,
+      data.data.result,
+      data.data.is_end
+    )
 
-      // 更新消息内容
-      message.content += data.data.result
-      message.updatedAt = formatDateTimeWithMs(nowWithMs())
-
-      // 根据是否结束更新状态
-      if (data.data.is_end) {
-        message.status = MessageStatus.FINISHED
-        messageStatus.value = MessageStatus.FINISHED
-        // 注意：不要立即清除 streamingMessageId，等待打字机效果完成
-      } else {
-        message.status = MessageStatus.STREAMING
-      }
-
-      // 更新数据库
-      await db.messages.update(message.id, {
-        content: message.content,
-        updatedAt: message.updatedAt,
-        status: message.status
-      })
-
-      // 触发响应式更新
-      messageList.value[messageIndex] = { ...message }
-
-      // 如果是流式消息，滚动到底部
-      if (message.status === MessageStatus.STREAMING) {
-        scrollToBottom()
-      }
+    // 如果是流式消息，滚动到底部
+    if (conversationStore.messageStatus === MessageStatus.STREAMING) {
+      scrollToBottom()
     }
   })
 })
 
 watch(() => route.params.id, async (newId) => {
-  const messages = await db.messages
-    .where('conversationId')
-    .equals(newId)
-    .toArray()
-
-  // 手动排序以确保精确性
-  messageList.value = messages.sort((a, b) => {
-    const timeA = new Date(a.createdAt).getTime()
-    const timeB = new Date(b.createdAt).getTime()
-
-    // 如果时间戳相同，问题排在答案前面
-    if (timeA === timeB) {
-      if (a.type === MessageType.QUESTION && b.type === MessageType.ANSWER) {
-        return -1
-      }
-      if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
-        return 1
-      }
-      return a.id.localeCompare(b.id)
+  if (newId && typeof newId === 'string') {
+    try {
+      await conversationStore.loadConversation(newId)
+      // 切换对话后滚动到底部
+      scrollToBottom()
+    } catch (error) {
+      console.error('Failed to load conversation:', error)
     }
-
-    return timeA - timeB
-  })
-
-  // 切换对话后滚动到底部
-  scrollToBottom()
+  }
 })
 
 // 监听消息列表变化，自动滚动到底部
-watch(() => messageList.value.length, () => {
+watch(() => conversationStore.messageList.length, () => {
   scrollToBottom()
 }, { flush: 'post' })
 
