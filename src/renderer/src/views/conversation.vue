@@ -2,20 +2,16 @@
   <div class="flex flex-col h-full">
     <!-- 标题部分 -->
     <div class="p-4 border-b border-theme bg-secondary">
-      <h1 class="text-xl font-medium text-primary">{{ mockConversaion.title }}</h1>
+      <h1 class="text-xl font-medium text-primary">{{ currentConversation?.title }}</h1>
     </div>
 
     <!-- 消息列表部分 - 使用flex-grow使其填充可用空间，底部增加足够的padding防止被输入框遮挡 -->
     <div class="flex-grow overflow-y-auto p-6 pb-32">
       <div class="max-w-3xl mx-auto w-full">
         <div class="flex flex-col gap-4">
-          <ChatMessageCard content="你好，我能帮你什么忙吗？" timestamp="2025-08-09T12:00:00" :is-user-message="false"
-            model="AI助手" />
-
-          <ChatMessageCard content="我想了解一下如何使用暗色模式和浅色模式。" timestamp="2025-08-09T12:01:00" :is-user-message="true" />
-
-          <ChatMessageCard content="您现在正在使用的应用已经支持了暗色和浅色模式切换。您可以通过点击左下角的切换按钮来更改主题。此外，系统还会自动检测您的系统偏好设置，并相应地应用主题。"
-            timestamp="2025-08-09T12:02:00" :is-user-message="false" model="AI助手" />
+          <ChatMessageCard v-for="message in messageList" :key="message.id" :content="message.content"
+            :timestamp="message.createdAt" :is-user-message="message.type === MessageType.QUESTION"
+            :model="currentConversation?.selectedModel" />
         </div>
       </div>
     </div>
@@ -37,21 +33,33 @@
 </template>
 
 <script setup lang="ts">
-import { Conversation } from '@renderer/types/conversation'
 import ChatMessageCard from '../components/ChatMessageCard.vue'
+import { onMounted, ref } from 'vue';
+import { db } from '@renderer/stores/db';
+import { useRoute, useRouter } from 'vue-router';
+import { Conversation } from '@renderer/types/conversation';
+import { Message, MessageType } from '@renderer/types/message';
 
-const mockConversaion = {
-  id: 'adadsadasda',
-  title: 'Conversation 1',
-  selectedModel: 'Model A',
-  createdAt: '2023-01-01',
-  updatedAt: '2023-01-02',
-  providerId: 'dasdasdasd'
-}
+const route = useRoute()
+const convertsationId = route.params.id as string
+const currentConversation = ref<Conversation>()
+const messageList = ref<Message[]>([])
+const router = useRouter()
 
-defineProps<{
-  conversation: Conversation
-}>()
+
+onMounted(async () => {
+  const convertsation = await db.conversations.get({
+    id: convertsationId
+  })
+  if (!convertsation) {
+    alert('会话不存在')
+    router.push('/chat')
+  } else {
+    currentConversation.value = convertsation
+    const messages = await db.messages.where('conversationId').equals(convertsationId).toArray()
+    messageList.value = messages
+  }
+})
 </script>
 
 <style scoped>

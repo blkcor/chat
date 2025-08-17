@@ -36,43 +36,15 @@
 
 <script setup lang="ts">
 import { Conversation } from '../types/conversation'
+import { smartFormatTime, getTimeAgo } from '../utils/dateUtils'
 
 defineProps<{
   items: Conversation[]
   active: string | undefined
 }>()
 
-
-// 格式化日期为 YYYY-MM-DD 格式
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
-}
-
-// 计算时间差（多久之前）
-const getTimeAgo = (dateString: string): string => {
-  const now = new Date()
-  const date = new Date(dateString)
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return '刚刚'
-  } else if (diffInSeconds < 3600) {
-    return `${Math.floor(diffInSeconds / 60)}分钟前`
-  } else if (diffInSeconds < 86400) {
-    return `${Math.floor(diffInSeconds / 3600)}小时前`
-  } else if (diffInSeconds < 2592000) {
-    return `${Math.floor(diffInSeconds / 86400)}天前`
-  } else if (diffInSeconds < 31536000) {
-    return `${Math.floor(diffInSeconds / 2592000)}月前`
-  } else {
-    return `${Math.floor(diffInSeconds / 31536000)}年前`
-  }
-}
+// 使用智能格式化时间
+const formatDate = smartFormatTime
 </script>
 
 <style scoped>

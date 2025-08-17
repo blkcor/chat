@@ -24,13 +24,7 @@ defineProps<{
   isUserMessage: boolean;
 }>();
 
-const formatTime = (timestamp: string) => {
-  const date = new Date(timestamp);
-  return new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-};
+import { formatTime } from '../utils/dateUtils';
 </script>
 
 <style scoped>

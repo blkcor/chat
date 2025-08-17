@@ -15,6 +15,6 @@ export interface Message {
   type: MessageType
   status?: MessageStatus
   conversationId: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }

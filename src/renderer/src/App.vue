@@ -2,17 +2,20 @@
 import SideBar from './components/SideBar.vue'
 import Header from './components/Header.vue'
 import { useTheme } from './composables/useTheme'
-import { onMounted } from 'vue'
-import { initProvider } from './stores/db'
-import { conversations } from './constants/data'
+import { onMounted, ref } from 'vue'
+import { db, initProvider } from './stores/db'
+import { Conversation } from './types/conversation'
 
 // 使用主题组合式函数，自动初始化主题
 const { isDarkMode, toggleDarkMode } = useTheme()
+const conversations = ref<Conversation[]>([])
 
 onMounted(async () => {
   // 初始化providers
   await initProvider()
-
+  // 获取conversationList
+  const conversationList = await db.conversations.toArray()
+  conversations.value = conversationList
 })
 </script>
 
