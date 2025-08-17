@@ -11,7 +11,7 @@ import { db } from '@renderer/stores/db'
 import { Provider } from '@renderer/types/provider'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { v4 } from 'uuid'
+import { generateConversationId } from '@renderer/utils/idUtils'
 import { now } from '@renderer/utils/dateUtils'
 
 const router = useRouter()
@@ -29,7 +29,7 @@ const handleStartChat = async () => {
   }
 
   // 创建conversation
-  const conversationId = v4()
+  const conversationId = generateConversationId()
   const currentTime = now()
 
   await db.conversations.add({

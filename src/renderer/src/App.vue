@@ -20,11 +20,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-screen w-screen bg-primary text-primary">
-    <Header :isDarkMode="isDarkMode" :toggleDarkMode="toggleDarkMode" />
-    <main class="flex flex-grow overflow-hidden">
+  <div class="app-container">
+    <Header :isDarkMode="isDarkMode" :toggleDarkMode="toggleDarkMode" class="app-header" />
+    <main class="app-main">
       <SideBar :conversations="conversations" />
-      <section class="flex-grow flex flex-col relative">
+      <section class="app-content">
         <router-view />
       </section>
     </main>
@@ -32,6 +32,40 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* 应用布局样式 */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.app-header {
+  flex-shrink: 0;
+  /* 防止Header被挤压 */
+  height: var(--header-height);
+  /* 确保固定高度 */
+}
+
+.app-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  /* 重要：允许flex子项正确收缩 */
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+  /* 重要：允许flex子项正确收缩 */
+}
+
 /* SVG 图标样式 */
 svg {
   stroke: currentColor;

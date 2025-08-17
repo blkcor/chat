@@ -1,5 +1,5 @@
 import { Provider } from '../types/provider'
-import { v4 } from 'uuid'
+import { generateProviderId, generateConversationId } from '../utils/idUtils'
 import { now, subtractTime } from '../utils/dateUtils'
 
 export const providers: Array<Provider> = [
@@ -34,7 +34,7 @@ export const providers: Array<Provider> = [
   //   models: ['Gemini-Pro', 'Gemini-Ultra', 'Gemini-Nano']
   // },
   {
-    id: v4(),
+    id: generateProviderId(),
     name: 'qianfan',
     title: '百度千帆',
     desc: '百度全知识增强的大语言模型，中文理解能力强。',
@@ -44,7 +44,7 @@ export const providers: Array<Provider> = [
     models: ['ERNIE-Speed-128K', 'ERNIE-Speed-8K', 'ERNIE-Lite-8K-0308', 'ERNIE-Tiny-8K']
   },
   {
-    id: v4(),
+    id: generateProviderId(),
     name: 'dashscope',
     title: '阿里灵积',
     desc: '阿里云推出的超大规模语言模型，具备多轮对话能力。',

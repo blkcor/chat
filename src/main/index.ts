@@ -8,8 +8,8 @@ import { ChatCompletion } from '@baiducloud/qianfan'
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: is.dev ? 1400 : 900, // 开发模式下增加宽度以容纳开发者工具
-    height: 670,
+    width: 1200, // 统一使用合适的默认宽度
+    height: 800, // 增加一些高度以获得更好的体验
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -52,11 +52,7 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-
-    // 在开发模式下自动打开开发者工具，并设置为在同一窗口显示
-    if (is.dev) {
-      mainWindow.webContents.openDevTools({ mode: 'bottom' })
-    }
+    // 开发者工具不再自动打开，可通过快捷键手动打开
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
