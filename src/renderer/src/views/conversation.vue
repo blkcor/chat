@@ -6,10 +6,10 @@
     </div>
 
     <!-- 消息列表部分 - 使用flex-grow使其填充可用空间，底部增加足够的padding防止被输入框遮挡 -->
-    <div class="flex-grow overflow-y-auto p-6 pb-32">
+    <div ref="messagesContainer" class="flex-grow overflow-y-auto p-6 pb-32">
       <div class="max-w-3xl mx-auto w-full">
         <div class="flex flex-col gap-4">
-          <ChatMessageCard v-for="message in messageList" :key="message.id" :content="message.content"
+          <ChatMessageCard v-for="message in sortedMessages" :key="message.id" :content="message.content"
             :timestamp="message.createdAt" :is-user-message="message.type === MessageType.QUESTION"
             :model="currentConversation?.selectedModel" :status="message.status" />
         </div>
@@ -34,13 +34,13 @@
 
 <script setup lang="ts">
 import ChatMessageCard from '../components/ChatMessageCard.vue'
-import { onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { db } from '@renderer/stores/db';
 import { useRoute, useRouter } from 'vue-router';
 import { Conversation } from '@renderer/types/conversation';
 import { Message, MessageStatus, MessageType } from '@renderer/types/message';
 import { v4 } from 'uuid'
-import { formatDateTime, now } from '@renderer/utils/dateUtils';
+import { formatDateTimeWithMs, nowWithMs } from '@renderer/utils/dateUtils';
 import { StreamableData } from '@type/message';
 
 const route = useRoute()
@@ -49,15 +49,49 @@ const currentConversation = ref<Conversation>()
 const messageList = ref<Message[]>([])
 const messageContent = ref<string>('')
 const router = useRouter()
+const messagesContainer = ref<HTMLElement>()
+
+// 计算属性：确保消息按时间排序，使用更精确的排序逻辑
+const sortedMessages = computed(() => {
+  return [...messageList.value].sort((a, b) => {
+    const timeA = new Date(a.createdAt).getTime()
+    const timeB = new Date(b.createdAt).getTime()
+
+    // 如果时间戳相同，使用消息类型排序（问题在前，答案在后）
+    if (timeA === timeB) {
+      if (a.type === MessageType.QUESTION && b.type === MessageType.ANSWER) {
+        return -1
+      }
+      if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
+        return 1
+      }
+      // 如果类型也相同，使用ID排序确保稳定性
+      return a.id.localeCompare(b.id)
+    }
+
+    return timeA - timeB
+  })
+})
+
+// 滚动到底部
+const scrollToBottom = async () => {
+  await nextTick()
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+  }
+}
 
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
+
+  // 生成精确的时间戳，确保问题和答案有不同的时间
+  const questionTime = formatDateTimeWithMs(nowWithMs())
   const questionMessage: Message = {
     id: v4(),
     conversationId: convertsationId,
     content: messageContent.value,
-    createdAt: formatDateTime(now()),
-    updatedAt: formatDateTime(now()),
+    createdAt: questionTime,
+    updatedAt: questionTime,
     type: MessageType.QUESTION
   }
 
@@ -72,19 +106,28 @@ const handleSend = async () => {
   messageList.value.push(questionMessage)
   messageContent.value = ''
 
-  // 这里需要立即创建一个loading状态的message
-  // TODO: 需要针对loading message 进行样式设置
+  // 滚动到底部显示新消息
+  scrollToBottom()
+
+  // 等待一毫秒确保时间戳不同
+  await new Promise(resolve => setTimeout(resolve, 1))
+
+  // 创建答案消息，确保时间戳晚于问题消息
+  const answerTime = formatDateTimeWithMs(nowWithMs())
   const streamingMessage: Message = {
     id: v4(),
     conversationId: convertsationId,
     content: '',
-    createdAt: formatDateTime(now()),
-    updatedAt: formatDateTime(now()),
+    createdAt: answerTime,
+    updatedAt: answerTime,
     type: MessageType.ANSWER,
     status: MessageStatus.LOADING
   }
   db.messages.add(streamingMessage)
   messageList.value.push(streamingMessage)
+
+  // 再次滚动到底部显示loading消息
+  scrollToBottom()
 
   window.chatAPI.sendQuestion({
     content: questionMessage.content,
@@ -105,8 +148,33 @@ onMounted(async () => {
     router.push('/')
   } else {
     currentConversation.value = convertsation
-    const messages = await db.messages.where('conversationId').equals(convertsationId).toArray()
-    messageList.value = messages
+    // 使用复合排序：先按时间，再按类型（问题在前）
+    const messages = await db.messages
+      .where('conversationId')
+      .equals(convertsationId)
+      .toArray()
+
+    // 手动排序以确保精确性
+    messageList.value = messages.sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime()
+      const timeB = new Date(b.createdAt).getTime()
+
+      // 如果时间戳相同，问题排在答案前面
+      if (timeA === timeB) {
+        if (a.type === MessageType.QUESTION && b.type === MessageType.ANSWER) {
+          return -1
+        }
+        if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
+          return 1
+        }
+        return a.id.localeCompare(b.id)
+      }
+
+      return timeA - timeB
+    })
+
+    // 加载完消息后滚动到底部
+    scrollToBottom()
   }
 
   window.chatAPI.streamMessage(async (data: StreamableData) => {
@@ -117,7 +185,7 @@ onMounted(async () => {
 
       // 更新消息内容
       message.content += data.data.result
-      message.updatedAt = formatDateTime(now())
+      message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
       // 根据是否结束更新状态
       if (data.data.is_end) {
@@ -135,14 +203,48 @@ onMounted(async () => {
 
       // 触发响应式更新
       messageList.value[messageIndex] = { ...message }
+
+      // 如果是流式消息，滚动到底部
+      if (message.status === MessageStatus.STREAMING) {
+        scrollToBottom()
+      }
     }
   })
 })
 
 watch(() => route.params.id, async (newId) => {
-  const messages = await db.messages.where('conversationId').equals(newId).toArray()
-  messageList.value = messages
+  const messages = await db.messages
+    .where('conversationId')
+    .equals(newId)
+    .toArray()
+
+  // 手动排序以确保精确性
+  messageList.value = messages.sort((a, b) => {
+    const timeA = new Date(a.createdAt).getTime()
+    const timeB = new Date(b.createdAt).getTime()
+
+    // 如果时间戳相同，问题排在答案前面
+    if (timeA === timeB) {
+      if (a.type === MessageType.QUESTION && b.type === MessageType.ANSWER) {
+        return -1
+      }
+      if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
+        return 1
+      }
+      return a.id.localeCompare(b.id)
+    }
+
+    return timeA - timeB
+  })
+
+  // 切换对话后滚动到底部
+  scrollToBottom()
 })
+
+// 监听消息列表变化，自动滚动到底部
+watch(() => messageList.value.length, () => {
+  scrollToBottom()
+}, { flush: 'post' })
 
 </script>
 

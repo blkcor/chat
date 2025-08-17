@@ -28,6 +28,13 @@ export const formatDateTime = (date: string | Date): string => {
 }
 
 /**
+ * 格式化高精度日期时间（包含毫秒）
+ */
+export const formatDateTimeWithMs = (date: string | Date): string => {
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss.SSS')
+}
+
+/**
  * 获取相对时间（多久之前）
  */
 export const getTimeAgo = (date: string | Date): string => {
@@ -91,6 +98,13 @@ export const smartFormatTime = (date: string | Date): string => {
  */
 export const now = (): string => {
   return dayjs().toISOString()
+}
+
+/**
+ * 创建高精度当前时间戳（包含毫秒）
+ */
+export const nowWithMs = (): string => {
+  return new Date().toISOString()
 }
 
 /**
