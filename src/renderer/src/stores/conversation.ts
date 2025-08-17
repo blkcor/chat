@@ -139,9 +139,10 @@ export const useConversationStore = defineStore('conversation', () => {
     if (isEnd) {
       message.status = MessageStatus.FINISHED
       messageStatus.value = MessageStatus.FINISHED
-      // 注意：不要立即清除 streamingMessageId，等待打字机效果完成
+      // 流式传输结束，但保持streamingMessageId直到打字机效果完成
     } else {
       message.status = MessageStatus.STREAMING
+      messageStatus.value = MessageStatus.STREAMING
     }
 
     // 更新数据库

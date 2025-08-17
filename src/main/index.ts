@@ -22,30 +22,82 @@ function createWindow(): void {
 
   ipcMain.on('send-question', async (_event, data: SendMessage) => {
     const { content, providerName, model, messageId } = data
+    console.log('Received question:', { content, providerName, model, messageId })
+
     if (providerName === 'qianfan') {
-      const client = new ChatCompletion()
-      const stream = await client.chat(
-        {
-          messages: [
-            {
-              role: 'user',
-              content
+      try {
+        const client = new ChatCompletion()
+        console.log('Starting chat stream...')
+
+        const stream = await client.chat(
+          {
+            messages: [
+              {
+                role: 'user',
+                content
+              }
+            ],
+            stream: true
+          },
+          model
+        )
+
+        console.log('Stream created, processing chunks...')
+
+        // 使用 setImmediate 避免阻塞主进程
+        const processStream = async () => {
+          try {
+            for await (const chunk of stream as AsyncIterableIterator<any>) {
+              console.log('Received chunk:', chunk)
+
+              const { is_end, result } = chunk
+
+              // 确保 result 不为 undefined
+              const streamData: StreamableData = {
+                data: {
+                  is_end: Boolean(is_end),
+                  result: result || ''
+                },
+                messageId
+              }
+
+              console.log('Sending to renderer:', streamData)
+              mainWindow.webContents.send('stream-message', streamData)
+
+              // 如果是结束标志，跳出循环
+              if (is_end) {
+                console.log('Stream ended')
+                break
+              }
+
+              // 让出控制权，避免阻塞
+              await new Promise((resolve) => setImmediate(resolve))
             }
-          ],
-          stream: true
-        },
-        model
-      )
-      for await (const chunk of stream as AsyncIterableIterator<any>) {
-        const { is_end, result } = chunk
-        const content: StreamableData = {
+          } catch (streamError) {
+            console.error('Stream processing error:', streamError)
+            // 发送错误结束信号
+            mainWindow.webContents.send('stream-message', {
+              data: {
+                is_end: true,
+                result: ''
+              },
+              messageId
+            })
+          }
+        }
+
+        // 异步处理流，不阻塞主进程
+        processStream()
+      } catch (error) {
+        console.error('Chat completion error:', error)
+        // 发送错误结束信号
+        mainWindow.webContents.send('stream-message', {
           data: {
-            is_end,
-            result
+            is_end: true,
+            result: ''
           },
           messageId
-        }
-        mainWindow.webContents.send('stream-message', content)
+        })
       }
     }
   })

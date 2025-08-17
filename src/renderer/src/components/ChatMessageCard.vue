@@ -19,9 +19,12 @@
           <span class="dot"></span>
         </div>
         <div v-else-if="shouldShowTypewriter && content" class="typewriter-container">
-          <TypewriterText :text="content" :speed="30" :is-complete="status === MessageStatus.FINISHED"
-            @typing-complete="onTypingComplete" />
-          <span v-if="!isTypingComplete" class="typing-cursor">|</span>
+          <TypewriterText ref="typewriterRef" :text="content" :speed="20"
+            :is-complete="status === MessageStatus.FINISHED" @typing-complete="onTypingComplete" />
+          <span v-if="shouldShowCursor" class="typing-cursor">|</span>
+        </div>
+        <div v-else-if="content">
+          <MarkdownMessage :content="content" />
         </div>
         <div v-else>
           <slot>{{ content }}</slot>
@@ -36,6 +39,7 @@ import { computed, ref, watch } from 'vue';
 import { formatTime } from '../utils/dateUtils';
 import { MessageStatus } from '../types/message';
 import TypewriterText from './TypewriterText.vue';
+import MarkdownMessage from './MarkdownMessage.vue';
 
 const props = defineProps<{
   content: string;
@@ -48,6 +52,7 @@ const props = defineProps<{
 }>();
 
 const isTypingComplete = ref(false)
+const typewriterRef = ref()
 
 // 计算是否为加载状态
 const isLoading = computed(() => props.status === MessageStatus.LOADING)
@@ -57,19 +62,43 @@ const shouldShowTypewriter = computed(() => {
   return props.isStreaming &&
     (props.status === MessageStatus.STREAMING ||
       (props.status === MessageStatus.FINISHED && !isTypingComplete.value)) &&
-    !props.isUserMessage
+    !props.isUserMessage &&
+    props.content.length > 0
+})
+
+// 计算是否应该显示光标
+const shouldShowCursor = computed(() => {
+  if (!shouldShowTypewriter.value) return false
+
+  // 如果TypewriterText组件存在且已经完成打字，不显示光标
+  if (typewriterRef.value?.isTypingFinished) return false
+
+  // 如果整体打字完成，不显示光标
+  if (isTypingComplete.value) return false
+
+  return true
 })
 
 // 当消息状态变化时重置打字完成状态
-watch(() => props.content, () => {
+watch(() => props.content, (newContent, oldContent) => {
   if (props.status === MessageStatus.STREAMING && props.isStreaming) {
-    isTypingComplete.value = false
+    // 只有在内容真正变化时才重置
+    if (newContent !== oldContent && newContent.length > (oldContent?.length || 0)) {
+      isTypingComplete.value = false
+    }
   }
 })
 
 // 当不再是流式状态时，立即完成打字
 watch(() => props.isStreaming, (newIsStreaming) => {
-  if (!newIsStreaming) {
+  if (!newIsStreaming && props.status === MessageStatus.FINISHED) {
+    isTypingComplete.value = true
+  }
+})
+
+// 监听状态变化
+watch(() => props.status, (newStatus) => {
+  if (newStatus === MessageStatus.FINISHED && !props.isStreaming) {
     isTypingComplete.value = true
   }
 })
@@ -101,6 +130,8 @@ const onTypingComplete = () => {
   box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.04),
     0 1px 3px rgba(0, 0, 0, 0.02);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .chat-message:hover {
@@ -147,6 +178,8 @@ const onTypingComplete = () => {
 
 .message-content {
   flex-grow: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .message-header {
@@ -180,6 +213,9 @@ const onTypingComplete = () => {
   font-size: 0.95rem;
   font-weight: 400;
   letter-spacing: 0.01em;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 /* Loading 状态样式 - 现代化设计 */
@@ -255,15 +291,19 @@ const onTypingComplete = () => {
 /* 打字机效果样式 */
 .typewriter-container {
   position: relative;
-  display: inline-block;
+  display: block;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .typing-cursor {
-  display: inline-block;
+  display: inline;
   color: var(--color-primary);
   font-weight: 400;
   animation: cursor-blink 1s infinite;
-  margin-left: 1px;
+  margin-left: 2px;
+  vertical-align: baseline;
 }
 
 @keyframes cursor-blink {
@@ -276,6 +316,40 @@ const onTypingComplete = () => {
   51%,
   100% {
     opacity: 0;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .chat-message {
+    padding: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .message-header {
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .message-author {
+    font-size: 0.75rem;
+  }
+
+  .message-time {
+    font-size: 0.7rem;
+  }
+
+  .message-body {
+    font-size: 0.9rem;
   }
 }
 </style>

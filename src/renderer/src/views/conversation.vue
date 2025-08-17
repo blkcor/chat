@@ -6,19 +6,19 @@
         <!-- 左侧：对话信息 -->
         <div class="conversation-info">
           <div class="conversation-main-info">
-            <h1 class="conversation-title">{{ currentConversation?.title }}</h1>
+            <h1 class="conversation-title">{{ conversationStore.currentConversation?.title }}</h1>
             <div class="conversation-meta">
               <div class="model-badge">
                 <span class="icon-[ri--cpu-line] w-3.5 h-3.5"></span>
-                <span>{{ currentConversation?.selectedModel }}</span>
+                <span>{{ conversationStore.currentConversation?.selectedModel }}</span>
               </div>
               <div class="message-count">
                 <span class="icon-[ri--message-3-line] w-3.5 h-3.5"></span>
                 <span>{{ conversationStore.messageList.length }} 条消息</span>
               </div>
-              <div class="last-active" v-if="currentConversation?.updatedAt">
+              <div class="last-active" v-if="conversationStore.currentConversation?.updatedAt">
                 <span class="icon-[ri--time-line] w-3.5 h-3.5"></span>
-                <span>{{ getTimeAgo(currentConversation.updatedAt) }}</span>
+                <span>{{ getTimeAgo(conversationStore.currentConversation.updatedAt) }}</span>
               </div>
             </div>
           </div>
@@ -57,7 +57,7 @@
 
     <!-- 消息列表部分 - 优化间距和最大宽度 -->
     <div ref="messagesContainer" class="flex-grow overflow-y-auto px-4 py-6 pb-36">
-      <div class="max-w-4xl mx-auto w-full">
+      <div class="max-w-4xl mx-auto w-full min-w-0">
         <div class="flex flex-col gap-6">
           <ChatMessageCard v-for="message in conversationStore.sortedMessages" :key="message.id"
             :content="message.content" :timestamp="message.createdAt"
@@ -69,13 +69,87 @@
       </div>
     </div>
 
+    <!-- 预设prompt面板 -->
+    <div v-if="showPromptPanel" class="prompt-panel-overlay" @click="showPromptPanel = false">
+      <div class="prompt-panel" @click.stop>
+        <div class="prompt-panel-header">
+          <h3 class="prompt-panel-title">选择预设Prompt</h3>
+          <button @click="showPromptPanel = false" class="close-btn">
+            <span class="icon-[ri--close-line] w-5 h-5"></span>
+          </button>
+        </div>
+
+        <!-- 分类选择 -->
+        <div class="prompt-categories">
+          <button v-for="category in promptCategories" :key="category.id" @click="selectedCategory = category.id"
+            :class="['category-btn', { active: selectedCategory === category.id }]">
+            <!-- 编程开发 -->
+            <span v-if="category.id === 'coding'" class="icon-[ri--code-line] w-4 h-4"></span>
+            <!-- 写作助手 -->
+            <span v-else-if="category.id === 'writing'" class="icon-[ri--quill-pen-line] w-4 h-4"></span>
+            <!-- 分析总结 -->
+            <span v-else-if="category.id === 'analysis'" class="icon-[ri--bar-chart-line] w-4 h-4"></span>
+            <!-- 创意设计 -->
+            <span v-else-if="category.id === 'creative'" class="icon-[ri--palette-line] w-4 h-4"></span>
+            <!-- 学习教育 -->
+            <span v-else-if="category.id === 'learning'" class="icon-[ri--book-open-line] w-4 h-4"></span>
+            <!-- 商务办公 -->
+            <span v-else-if="category.id === 'business'" class="icon-[ri--briefcase-line] w-4 h-4"></span>
+            <!-- 默认 -->
+            <span v-else class="icon-[ri--folder-line] w-4 h-4"></span>
+            <span>{{ category.name }}</span>
+          </button>
+        </div>
+
+        <!-- prompt列表 -->
+        <div class="prompt-list">
+          <div v-for="prompt in getPromptsByCategory(selectedCategory)" :key="prompt.id" @click="selectPrompt(prompt)"
+            class="prompt-item">
+            <div class="prompt-item-header">
+              <!-- TODO: dynamic render with config file rather then using if else, blame to me🤮 ...-->
+              <!-- 代码审查 -->
+              <span v-if="prompt.id === 'code-review'" class="icon-[ri--search-eye-line] w-4 h-4"></span>
+              <!-- 调试助手 -->
+              <span v-else-if="prompt.id === 'debug-help'" class="icon-[ri--bug-line] w-4 h-4"></span>
+              <!-- API设计 -->
+              <span v-else-if="prompt.id === 'api-design'" class="icon-[icon-park-solid--api] w-4 h-4"></span>
+              <!-- 文章写作 -->
+              <span v-else-if="prompt.id === 'article-writing'" class="icon-[ri--article-line] w-4 h-4"></span>
+              <!-- 邮件模板 -->
+              <span v-else-if="prompt.id === 'email-template'" class="icon-[ri--mail-line] w-4 h-4"></span>
+              <!-- 数据分析 -->
+              <span v-else-if="prompt.id === 'data-analysis'" class="icon-[ri--line-chart-line] w-4 h-4"></span>
+              <!-- 文档总结 -->
+              <span v-else-if="prompt.id === 'document-summary'" class="icon-[ri--file-text-line] w-4 h-4"></span>
+              <!-- 创意头脑风暴 -->
+              <span v-else-if="prompt.id === 'creative-brainstorm'" class="icon-[ri--lightbulb-line] w-4 h-4"></span>
+              <!-- 概念解释 -->
+              <span v-else-if="prompt.id === 'explain-concept'" class="icon-[ri--question-answer-line] w-4 h-4"></span>
+              <!-- 会议议程 -->
+              <span v-else-if="prompt.id === 'meeting-agenda'" class="icon-[ri--calendar-check-line] w-4 h-4"></span>
+              <!-- 默认 -->
+              <span v-else class="icon-[ri--file-line] w-4 h-4"></span>
+              <h4 class="prompt-title">{{ prompt.title }}</h4>
+            </div>
+            <p class="prompt-description">{{ prompt.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 输入框部分 - 优化设计和间距 -->
     <div class="chat-input-container">
       <div class="max-w-4xl mx-auto w-full px-6">
         <div class="message-input-wrapper">
           <div class="message-input-card">
-            <input type="text" placeholder="输入消息..." @keyup.enter="handleSend" v-model="messageContent"
-              class="message-input" />
+            <!-- 预设prompt按钮 -->
+            <button @click="togglePromptPanel" class="prompt-btn" title="选择预设Prompt">
+              <span class="icon-[ri--magic-line] w-4 h-4"></span>
+            </button>
+
+            <textarea placeholder="输入消息..." @keydown.enter.exact.prevent="handleSend" v-model="messageContent"
+              class="message-input" rows="1" ref="messageInputRef"></textarea>
+
             <button @click="handleSend" class="send-button"
               :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING">
               <span
@@ -98,18 +172,21 @@ import { MessageStatus, MessageType } from '@renderer/types/message';
 import { nowWithMs, getTimeAgo } from '@renderer/utils/dateUtils';
 import { StreamableData } from '@type/message';
 import { useConversationStore } from '@renderer/stores';
+import { promptTemplates, promptCategories, type PromptTemplate } from '@renderer/constants/prompts';
 
 const route = useRoute()
 const convertsationId = route.params.id as string
 const messageContent = ref<string>('')
 const router = useRouter()
 const messagesContainer = ref<HTMLElement>()
+const messageInputRef = ref<HTMLTextAreaElement>()
+
+// 预设prompt相关状态
+const showPromptPanel = ref(false)
+const selectedCategory = ref('coding')
 
 // 使用 Pinia store
 const conversationStore = useConversationStore()
-
-// 使用 store 中的计算属性
-const { sortedMessages, currentConversation, messageList, messageStatus, streamingMessageId } = conversationStore
 
 // 滚动到底部
 const scrollToBottom = async () => {
@@ -158,6 +235,37 @@ const toggleSettings = () => {
   console.log('打开对话设置')
 }
 
+// 预设prompt相关方法
+const togglePromptPanel = () => {
+  showPromptPanel.value = !showPromptPanel.value
+}
+
+const selectPrompt = (prompt: PromptTemplate) => {
+  messageContent.value = prompt.content
+  showPromptPanel.value = false
+}
+
+const getPromptsByCategory = (category: string) => {
+  return promptTemplates.filter(template => template.category === category)
+}
+
+
+
+// 自动调整textarea高度
+const adjustTextareaHeight = () => {
+  if (messageInputRef.value) {
+    messageInputRef.value.style.height = 'auto'
+    messageInputRef.value.style.height = Math.min(messageInputRef.value.scrollHeight, 120) + 'px'
+  }
+}
+
+// 监听输入内容变化，自动调整高度
+watch(messageContent, () => {
+  nextTick(() => {
+    adjustTextareaHeight()
+  })
+})
+
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
 
@@ -185,12 +293,15 @@ const handleSend = async () => {
     }
 
     // 发送消息到主进程
-    window.chatAPI.sendQuestion({
+    const sendData = {
       content: questionMessage.content,
       providerName: providerInfo?.name || '',
       model: conversationStore.currentConversation?.selectedModel || '',
       messageId: streamingMessage.id
-    })
+    }
+
+    console.log('Sending question to main process:', sendData)
+    window.chatAPI.sendQuestion(sendData)
   } catch (error) {
     console.error('Failed to send message:', error)
     alert('发送消息失败')
@@ -213,15 +324,21 @@ onMounted(async () => {
 
   // 监听流式消息
   window.chatAPI.streamMessage(async (data: StreamableData) => {
-    await conversationStore.updateStreamingMessage(
-      data.messageId,
-      data.data.result,
-      data.data.is_end
-    )
+    console.log('Renderer received stream data:', data)
 
-    // 如果是流式消息，滚动到底部
-    if (conversationStore.messageStatus === MessageStatus.STREAMING) {
-      scrollToBottom()
+    try {
+      await conversationStore.updateStreamingMessage(
+        data.messageId,
+        data.data.result || '',
+        data.data.is_end
+      )
+
+      // 如果是流式消息，滚动到底部
+      if (conversationStore.messageStatus === MessageStatus.STREAMING) {
+        scrollToBottom()
+      }
+    } catch (error) {
+      console.error('Error updating streaming message:', error)
     }
   })
 })
@@ -540,5 +657,220 @@ watch(() => conversationStore.messageList.length, () => {
   cursor: not-allowed;
   opacity: 0.5;
   box-shadow: none;
+}
+
+/* 预设prompt按钮 */
+.prompt-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-right: 0.5rem;
+}
+
+.prompt-btn:hover {
+  background: var(--bg-accent);
+  color: var(--color-primary);
+}
+
+/* 将input改为textarea */
+.message-input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  caret-color: var(--color-primary);
+  transition: all var(--transition-normal);
+  padding: 0.25rem 0;
+  resize: none;
+  min-height: 1.5rem;
+  max-height: 120px;
+  overflow-y: auto;
+  font-family: inherit;
+}
+
+/* 预设prompt面板样式 */
+.prompt-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.prompt-panel {
+  background: var(--bg-primary);
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.prompt-panel-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.close-btn:hover {
+  background: var(--bg-accent);
+  color: var(--text-primary);
+}
+
+/* 分类选择 */
+.prompt-categories {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.category-btn:hover {
+  background: var(--bg-accent);
+  color: var(--text-primary);
+}
+
+.category-btn.active {
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  border-color: var(--color-primary);
+}
+
+/* prompt列表 */
+.prompt-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.prompt-item {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: var(--bg-secondary);
+}
+
+.prompt-item:hover {
+  border-color: var(--color-primary);
+  background: var(--bg-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 127, 222, 0.1);
+}
+
+.prompt-item:last-child {
+  margin-bottom: 0;
+}
+
+.prompt-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prompt-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.prompt-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .prompt-panel-overlay {
+    padding: 1rem;
+  }
+
+  .prompt-panel {
+    max-height: 90vh;
+  }
+
+  .prompt-categories {
+    padding: 0.75rem 1rem;
+  }
+
+  .category-btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .prompt-list {
+    padding: 0.75rem;
+  }
+
+  .prompt-item {
+    padding: 0.75rem;
+  }
 }
 </style>
