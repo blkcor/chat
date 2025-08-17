@@ -1,34 +1,15 @@
 # chat
 
-An Electron application with Vue and TypeScript
+An Chat application.
 
-## Recommended IDE Setup
+## BUG FIX
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- [ ] the ui will block when outputing mass messages.
 
-## Project Setup
+## Feature ADD
 
-### Install
-
-```bash
-$ pnpm install
-```
-
-### Development
-
-```bash
-$ pnpm dev
-```
-
-### Build
-
-```bash
-# For windows
-$ pnpm build:win
-
-# For macOS
-$ pnpm build:mac
-
-# For Linux
-$ pnpm build:linux
-```
+- [ ] support more models.
+- [ ] support file upload.
+- [ ] support image recognize and answer based on that.
+- [ ] support mcp.
+- [ ] support ssr with a fuck new interreaction.

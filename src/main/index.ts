@@ -22,16 +22,18 @@ function createWindow(): void {
 
   ipcMain.on('send-question', async (_event, data: SendMessage) => {
     const { content, providerName, model, messageId } = data
-    console.log('Received question:', { content, providerName, model, messageId })
 
     if (providerName === 'qianfan') {
       try {
         const client = new ChatCompletion()
-        console.log('Starting chat stream...')
 
         const stream = await client.chat(
           {
             messages: [
+              {
+                role: 'assistant',
+                content: '使用markdown格式输出所有内容'
+              },
               {
                 role: 'user',
                 content
@@ -42,36 +44,30 @@ function createWindow(): void {
           model
         )
 
-        console.log('Stream created, processing chunks...')
-
         // 使用 setImmediate 避免阻塞主进程
         const processStream = async () => {
           try {
             for await (const chunk of stream as AsyncIterableIterator<any>) {
-              console.log('Received chunk:', chunk)
-
               const { is_end, result } = chunk
 
               // 确保 result 不为 undefined
               const streamData: StreamableData = {
                 data: {
-                  is_end: Boolean(is_end),
-                  result: result || ''
+                  is_end,
+                  result
                 },
                 messageId
               }
 
-              console.log('Sending to renderer:', streamData)
               mainWindow.webContents.send('stream-message', streamData)
 
               // 如果是结束标志，跳出循环
-              if (is_end) {
-                console.log('Stream ended')
-                break
-              }
+              // if (is_end) {
+              //   break
+              // }
 
               // 让出控制权，避免阻塞
-              await new Promise((resolve) => setImmediate(resolve))
+              // await new Promise((resolve) => setImmediate(resolve))
             }
           } catch (streamError) {
             console.error('Stream processing error:', streamError)
