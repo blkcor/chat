@@ -97,6 +97,9 @@ export const useConversationStore = defineStore('conversation', () => {
     await db.messages.add(questionMessage)
     messageList.value.push(questionMessage)
 
+    // 如果这是对话的第一条消息，更新对话标题
+    await updateConversationTitleIfFirst(conversationId, content)
+
     return questionMessage
   }
 
@@ -177,6 +180,53 @@ export const useConversationStore = defineStore('conversation', () => {
     streamingMessageId.value = null
   }
 
+  // 如果是对话的第一条消息，更新对话标题
+  const updateConversationTitleIfFirst = async (conversationId: string, content: string) => {
+    try {
+      // 检查这个对话是否只有一条消息（刚创建的这条）
+      const messageCount = await db.messages.where('conversationId').equals(conversationId).count()
+      console.log(`Conversation ${conversationId} has ${messageCount} messages`)
+
+      if (messageCount === 1) {
+        // 生成新标题：取消息内容的前30个字符，去掉换行符
+        const newTitle =
+          content
+            .replace(/\n/g, ' ') // 替换换行符为空格
+            .replace(/\s+/g, ' ') // 合并多个空格为一个
+            .trim() // 去掉首尾空格
+            .substring(0, 30) + // 取前30个字符
+          (content.length > 30 ? '...' : '') // 如果超过30字符，添加省略号
+
+        console.log(`Updating conversation title to: "${newTitle}"`)
+
+        // 更新数据库中的对话标题
+        await db.conversations.update(conversationId, {
+          title: newTitle,
+          updatedAt: formatDateTimeWithMs(nowWithMs())
+        })
+
+        // 更新当前对话状态
+        if (currentConversation.value?.id === conversationId) {
+          currentConversation.value.title = newTitle
+          currentConversation.value.updatedAt = formatDateTimeWithMs(nowWithMs())
+        }
+
+        // 更新对话列表中的对话
+        const conversationIndex = conversations.value.findIndex(
+          (conv) => conv.id === conversationId
+        )
+        if (conversationIndex !== -1) {
+          conversations.value[conversationIndex].title = newTitle
+          conversations.value[conversationIndex].updatedAt = formatDateTimeWithMs(nowWithMs())
+        }
+
+        console.log('Conversation title updated successfully')
+      }
+    } catch (error) {
+      console.error('Failed to update conversation title:', error)
+    }
+  }
+
   return {
     // State
     conversations,
@@ -197,6 +247,7 @@ export const useConversationStore = defineStore('conversation', () => {
     updateStreamingMessage,
     onTypingComplete,
     clearConversation,
-    clearCurrentConversation
+    clearCurrentConversation,
+    updateConversationTitleIfFirst
   }
 })

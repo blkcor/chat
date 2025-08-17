@@ -53,6 +53,7 @@ const formatDate = smartFormatTime
 <style scoped>
 .conversation-list {
   width: 100%;
+  height: 100%;
 }
 
 /* 空状态 */
@@ -63,6 +64,7 @@ const formatDate = smartFormatTime
   justify-content: center;
   padding: 2rem 1rem;
   text-align: center;
+  height: 100%;
 }
 
 .empty-icon {
