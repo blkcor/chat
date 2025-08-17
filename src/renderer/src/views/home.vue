@@ -7,27 +7,19 @@
 
 <script setup lang="ts">
 import ProviderSelect from '@renderer/components/ProviderSelect.vue'
-import { ref } from 'vue'
-import type { Provider } from '../types/provider'
+import { db } from '@renderer/stores/db'
+import { Provider } from '@renderer/types/provider'
+import { onMounted, ref } from 'vue'
 
 const modelValue = ref<string>('')
-
-// 暂时hardcode一下 应该从api拉
-const providers: Array<Provider> = [
-  {
-    id: '0x4ffsadasdadsadasdas',
-    name: 'OpenAI',
-    title: '你不知道opneai?',
-    desc: 'OpenAI是一个人工智能研究实验室，致力于推动数字智能的边界。',
-    avatar: 'https://openai.com/favicon.ico',
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-02',
-    models: ['GPT5', 'GPT-4o']
-  }
-]
+const providers = ref<Provider[]>([])
 
 const handleStartChat = () => {
   // 校验参数
   console.log('当前选择的模型是:', modelValue.value)
 }
+
+onMounted(async () => {
+  providers.value = await db.providers.toArray()
+})
 </script>

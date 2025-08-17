@@ -10,6 +10,7 @@ export enum MessageStatus {
 }
 
 export interface Message {
+  id: string
   content: string
   type: MessageType
   status?: MessageStatus

@@ -1,5 +1,5 @@
 export enum Tab {
   HOME = 'home',
-  // CONVERSATION = 'conversation',
+  CONVERSATION = 'conversation',
   SETTING = 'setting'
 }

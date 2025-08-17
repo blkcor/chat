@@ -2,29 +2,18 @@
 import SideBar from './components/SideBar.vue'
 import Header from './components/Header.vue'
 import { useTheme } from './composables/useTheme'
-
-// Mock data for conversations
-const conversations = [
-  {
-    id: 'adadsadasda',
-    title: 'Conversation 1',
-    selectedModel: 'Model A',
-    createdAt: '2023-01-01',
-    updatedAt: '2023-01-02',
-    providerId: 'dasdasdasd'
-  },
-  {
-    id: 'dasdasdas',
-    title: 'Conversation 2',
-    selectedModel: 'Model B',
-    createdAt: '2023-01-03',
-    updatedAt: '2023-01-04',
-    providerId: 'dasdasdasda'
-  }
-]
+import { onMounted } from 'vue'
+import { initProvider } from './stores/db'
+import { conversations } from './constants/data'
 
 // 使用主题组合式函数，自动初始化主题
 const { isDarkMode, toggleDarkMode } = useTheme()
+
+onMounted(async () => {
+  // 初始化providers
+  await initProvider()
+
+})
 </script>
 
 <template>
