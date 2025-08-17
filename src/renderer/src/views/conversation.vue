@@ -26,8 +26,11 @@
           <div class="message-input-card">
             <input type="text" placeholder="输入消息..." @keyup.enter="handleSend" v-model="messageContent"
               class="message-input" />
-            <button @click="handleSend" class="send-button" :disabled="!messageContent.trim()">
-              <span class="icon-[ri--send-plane-line] w-5 h-5"></span>
+            <button @click="handleSend" class="send-button"
+              :disabled="!messageContent.trim() && messageStatus !== MessageStatus.STREAMING">
+              <span
+                :class="messageStatus !== MessageStatus.STREAMING ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
+                class="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -54,6 +57,7 @@ const messageList = ref<Message[]>([])
 const messageContent = ref<string>('')
 const router = useRouter()
 const messagesContainer = ref<HTMLElement>()
+const messageStatus = ref<MessageStatus>(MessageStatus.LOADING)
 
 // 计算属性：确保消息按时间排序，使用更精确的排序逻辑
 const sortedMessages = computed(() => {
@@ -88,6 +92,8 @@ const scrollToBottom = async () => {
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
 
+  messageStatus.value = MessageStatus.STREAMING
+
   // 生成精确的时间戳，确保问题和答案有不同的时间
   const questionTime = formatDateTimeWithMs(nowWithMs())
   const questionMessage: Message = {
@@ -116,7 +122,7 @@ const handleSend = async () => {
   // 等待一毫秒确保时间戳不同
   await new Promise(resolve => setTimeout(resolve, 1))
 
-  // 创建答案消息，确保时间戳晚于问题消息
+  // 创建answer消息，确保时间戳晚于问题消息
   const answerTime = formatDateTimeWithMs(nowWithMs())
   const streamingMessage: Message = {
     id: v4(),
@@ -194,6 +200,7 @@ onMounted(async () => {
       // 根据是否结束更新状态
       if (data.data.is_end) {
         message.status = MessageStatus.FINISHED
+        messageStatus.value = MessageStatus.FINISHED
       } else {
         message.status = MessageStatus.STREAMING
       }
@@ -249,6 +256,7 @@ watch(() => route.params.id, async (newId) => {
 watch(() => messageList.value.length, () => {
   scrollToBottom()
 }, { flush: 'post' })
+
 
 </script>
 

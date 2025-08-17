@@ -22,6 +22,8 @@ watch(() => route.fullPath, (newPath) => {
     if (id) {
       conversationId.value = id
     }
+  } else {
+    conversationId.value = undefined
   }
 })
 

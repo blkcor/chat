@@ -36,7 +36,7 @@ function createWindow(): void {
         },
         model
       )
-      for await (const chunk of stream as AsyncIterableIterator<unknown>) {
+      for await (const chunk of stream as AsyncIterableIterator<any>) {
         const { is_end, result } = chunk
         const content: StreamableData = {
           data: {

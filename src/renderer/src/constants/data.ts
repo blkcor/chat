@@ -38,7 +38,7 @@ export const providers: Array<Provider> = [
     name: 'qianfan',
     title: '百度千帆',
     desc: '百度全知识增强的大语言模型，中文理解能力强。',
-    avatar: 'https://www.baidu.com/favicon.ico',
+    avatar: 'https://bce.bdstatic.com/img/favicon.ico',
     createdAt: subtractTime(now(), 15, 'day'),
     updatedAt: subtractTime(now(), 1, 'hour'),
     models: ['ERNIE-Speed-128K', 'ERNIE-Speed-8K', 'ERNIE-Lite-8K-0308', 'ERNIE-Tiny-8K']
@@ -48,7 +48,7 @@ export const providers: Array<Provider> = [
     name: 'dashscope',
     title: '阿里灵积',
     desc: '阿里云推出的超大规模语言模型，具备多轮对话能力。',
-    avatar: 'https://www.alibabacloud.com/favicon.ico',
+    avatar: 'https://img.alicdn.com/tfs/TB1_ZXuNcfpK1RjSZFOXXa6nFXa-32-32.ico',
     createdAt: subtractTime(now(), 10, 'day'),
     updatedAt: subtractTime(now(), 30, 'minute'),
     models: ['Qwen-Max', 'Qwen-Plus', 'Qwen-Turbo']
