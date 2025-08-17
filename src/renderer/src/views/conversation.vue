@@ -11,7 +11,7 @@
         <div class="flex flex-col gap-4">
           <ChatMessageCard v-for="message in messageList" :key="message.id" :content="message.content"
             :timestamp="message.createdAt" :is-user-message="message.type === MessageType.QUESTION"
-            :model="currentConversation?.selectedModel" />
+            :model="currentConversation?.selectedModel" :status="message.status" />
         </div>
       </div>
     </div>
@@ -38,9 +38,10 @@ import { onMounted, ref, watch } from 'vue';
 import { db } from '@renderer/stores/db';
 import { useRoute, useRouter } from 'vue-router';
 import { Conversation } from '@renderer/types/conversation';
-import { Message, MessageType } from '@renderer/types/message';
+import { Message, MessageStatus, MessageType } from '@renderer/types/message';
 import { v4 } from 'uuid'
 import { formatDateTime, now } from '@renderer/utils/dateUtils';
+import { StreamableData } from '@type/message';
 
 const route = useRoute()
 const convertsationId = route.params.id as string
@@ -49,9 +50,9 @@ const messageList = ref<Message[]>([])
 const messageContent = ref<string>('')
 const router = useRouter()
 
-const handleSend = () => {
+const handleSend = async () => {
   if (messageContent.value.trim() === '') return
-  const message: Message = {
+  const questionMessage: Message = {
     id: v4(),
     conversationId: convertsationId,
     content: messageContent.value,
@@ -59,9 +60,39 @@ const handleSend = () => {
     updatedAt: formatDateTime(now()),
     type: MessageType.QUESTION
   }
-  db.messages.add(message)
-  messageList.value.push(message)
+
+  // 通知主线程
+  const providerInfo = await db.providers.where({ id: currentConversation.value?.providerId }).first()
+  if (!providerInfo) {
+    alert('无效的provider')
+    return
+  }
+
+  db.messages.add(questionMessage)
+  messageList.value.push(questionMessage)
   messageContent.value = ''
+
+  // 这里需要立即创建一个loading状态的message
+  // TODO: 需要针对loading message 进行样式设置
+  const streamingMessage: Message = {
+    id: v4(),
+    conversationId: convertsationId,
+    content: '',
+    createdAt: formatDateTime(now()),
+    updatedAt: formatDateTime(now()),
+    type: MessageType.ANSWER,
+    status: MessageStatus.LOADING
+  }
+  db.messages.add(streamingMessage)
+  messageList.value.push(streamingMessage)
+
+  window.chatAPI.sendQuestion({
+    content: questionMessage.content,
+    providerName: providerInfo?.name || '',
+    model: currentConversation.value?.selectedModel || '',
+    messageId: streamingMessage.id
+  })
+
 }
 
 
@@ -71,12 +102,41 @@ onMounted(async () => {
   })
   if (!convertsation) {
     alert('会话不存在')
-    router.push('/chat')
+    router.push('/')
   } else {
     currentConversation.value = convertsation
     const messages = await db.messages.where('conversationId').equals(convertsationId).toArray()
     messageList.value = messages
   }
+
+  window.chatAPI.streamMessage(async (data: StreamableData) => {
+    // 找到对应的消息并更新内容
+    const messageIndex = messageList.value.findIndex(msg => msg.id === data.messageId)
+    if (messageIndex !== -1) {
+      const message = messageList.value[messageIndex]
+
+      // 更新消息内容
+      message.content += data.data.result
+      message.updatedAt = formatDateTime(now())
+
+      // 根据是否结束更新状态
+      if (data.data.is_end) {
+        message.status = MessageStatus.FINISHED
+      } else {
+        message.status = MessageStatus.STREAMING
+      }
+
+      // 更新数据库
+      await db.messages.update(message.id, {
+        content: message.content,
+        updatedAt: message.updatedAt,
+        status: message.status
+      })
+
+      // 触发响应式更新
+      messageList.value[messageIndex] = { ...message }
+    }
+  })
 })
 
 watch(() => route.params.id, async (newId) => {

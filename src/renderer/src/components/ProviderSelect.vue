@@ -56,7 +56,7 @@
             <!-- Provider 头 -->
             <SelectLabel class="px-3 py-1.5 text-xs font-semibold text-muted flex items-center gap-2">
               <img class="w-4 h-4 rounded-full" :src="provider.avatar" />
-              {{ provider.name }}
+              {{ provider.title }}
             </SelectLabel>
 
             <!-- 模型列表 -->

@@ -1,7 +1,10 @@
 <template>
-  <div class="chat-message" :class="{ 'user-message': isUserMessage }">
-    <div class="avatar" :class="{ 'user-avatar': isUserMessage }">
+  <div class="chat-message" :class="{ 'user-message': isUserMessage, 'loading-message': isLoading }">
+    <div class="avatar" :class="{ 'user-avatar': isUserMessage, 'loading-avatar': isLoading }">
       <span v-if="isUserMessage">U</span>
+      <span v-else-if="isLoading" class="loading-spinner">
+        <span class="icon-[eos-icons--loading] w-5 h-5 animate-spin"></span>
+      </span>
       <span v-else>A</span>
     </div>
     <div class="message-content">
@@ -10,21 +13,34 @@
         <span class="message-time">{{ formatTime(timestamp) }}</span>
       </div>
       <div class="message-body">
-        <slot>{{ content }}</slot>
+        <div v-if="isLoading && !content" class="loading-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <div v-else>
+          <slot>{{ content }}</slot>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { formatTime } from '../utils/dateUtils';
+import { MessageStatus } from '../types/message';
+
 defineProps<{
   content: string;
   timestamp: string;
   model?: string;
   isUserMessage: boolean;
+  status?: MessageStatus;
 }>();
 
-import { formatTime } from '../utils/dateUtils';
+// 计算是否为加载状态
+const isLoading = computed(() => status === MessageStatus.LOADING || status === MessageStatus.STREAMING);
 </script>
 
 <style scoped>
@@ -98,5 +114,54 @@ import { formatTime } from '../utils/dateUtils';
 .message-body {
   color: var(--text-primary);
   line-height: 1.5;
+}
+
+/* Loading 状态样式 */
+.loading-message {
+  border-left-color: var(--color-warning);
+  background-color: var(--bg-tertiary);
+}
+
+.loading-avatar {
+  background-color: var(--color-warning);
+  color: var(--text-on-primary);
+}
+
+.loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--color-secondary);
+  animation: loading-pulse 1.4s ease-in-out infinite both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loading-pulse {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>

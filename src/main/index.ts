@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { SendMessage, StreamableData } from '../types/message'
+import { ChatCompletion } from '@baiducloud/qianfan'
 
 function createWindow(): void {
   // Create the browser window.
@@ -14,6 +16,36 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
+    }
+  })
+
+  ipcMain.on('send-question', async (_event, data: SendMessage) => {
+    const { content, providerName, model, messageId } = data
+    if (providerName === 'qianfan') {
+      const client = new ChatCompletion()
+      const stream = await client.chat(
+        {
+          messages: [
+            {
+              role: 'user',
+              content
+            }
+          ],
+          stream: true
+        },
+        model
+      )
+      for await (const chunk of stream as AsyncIterableIterator<any>) {
+        const { is_end, result } = chunk
+        const content: StreamableData = {
+          data: {
+            is_end,
+            result
+          },
+          messageId
+        }
+        mainWindow.webContents.send('stream-message', content)
+      }
     }
   })
 
