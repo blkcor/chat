@@ -8,14 +8,15 @@ import { ChatCompletion } from '@baiducloud/qianfan'
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
+    width: is.dev ? 1400 : 900, // 开发模式下增加宽度以容纳开发者工具
     height: 670,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      webSecurity: is.dev ? false : true // 开发模式下禁用web安全以便调试
     }
   })
 
@@ -35,7 +36,7 @@ function createWindow(): void {
         },
         model
       )
-      for await (const chunk of stream as AsyncIterableIterator<any>) {
+      for await (const chunk of stream as AsyncIterableIterator<unknown>) {
         const { is_end, result } = chunk
         const content: StreamableData = {
           data: {
@@ -51,6 +52,11 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+
+    // 在开发模式下自动打开开发者工具，并设置为在同一窗口显示
+    if (is.dev) {
+      mainWindow.webContents.openDevTools({ mode: 'bottom' })
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -79,6 +85,28 @@ app.whenReady().then(() => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+
+    // 添加自定义快捷键
+    if (is.dev) {
+      // F12 切换开发者工具
+      window.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F12') {
+          if (window.webContents.isDevToolsOpened()) {
+            window.webContents.closeDevTools()
+          } else {
+            window.webContents.openDevTools({ mode: 'right' })
+          }
+        }
+        // Ctrl+Shift+I 也可以切换开发者工具
+        if (input.control && input.shift && input.key === 'I') {
+          if (window.webContents.isDevToolsOpened()) {
+            window.webContents.closeDevTools()
+          } else {
+            window.webContents.openDevTools({ mode: 'bottom' })
+          }
+        }
+      })
+    }
   })
 
   // IPC test

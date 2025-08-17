@@ -1,14 +1,17 @@
 <template>
-  <div class="flex flex-col h-full">
-    <!-- 标题部分 -->
-    <div class="p-4 border-b border-theme bg-secondary">
-      <h1 class="text-xl font-medium text-primary">{{ currentConversation?.title }}</h1>
+  <div class="flex flex-col h-full bg-primary">
+    <!-- 标题部分 - 优化间距和字体 -->
+    <div class="px-6 py-4 border-b border-theme bg-secondary backdrop-blur-sm">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="text-lg font-semibold text-primary tracking-tight">{{ currentConversation?.title }}</h1>
+        <p class="text-xs text-secondary mt-1 opacity-75">{{ currentConversation?.selectedModel }}</p>
+      </div>
     </div>
 
-    <!-- 消息列表部分 - 使用flex-grow使其填充可用空间，底部增加足够的padding防止被输入框遮挡 -->
-    <div ref="messagesContainer" class="flex-grow overflow-y-auto p-6 pb-32">
-      <div class="max-w-3xl mx-auto w-full">
-        <div class="flex flex-col gap-4">
+    <!-- 消息列表部分 - 优化间距和最大宽度 -->
+    <div ref="messagesContainer" class="flex-grow overflow-y-auto px-4 py-6 pb-36">
+      <div class="max-w-4xl mx-auto w-full">
+        <div class="flex flex-col gap-6">
           <ChatMessageCard v-for="message in sortedMessages" :key="message.id" :content="message.content"
             :timestamp="message.createdAt" :is-user-message="message.type === MessageType.QUESTION"
             :model="currentConversation?.selectedModel" :status="message.status" />
@@ -16,16 +19,17 @@
       </div>
     </div>
 
-    <!-- 输入框部分 - 固定在底部 -->
+    <!-- 输入框部分 - 优化设计和间距 -->
     <div class="chat-input-container">
-      <div class="max-w-3xl mx-auto w-full px-6">
-        <div class="card p-3 flex items-center shadow-lg message-input-card">
-          <input type="text" placeholder="输入消息..." @keyup.enter="handleSend" v-model="messageContent"
-            class="flex-grow bg-transparent border-none outline-none text-primary message-input" />
-          <button @click="handleSend" class="btn-primary ml-2 py-1 px-4 flex items-center gap-1">
-            <span>发送</span>
-            <span class="icon-[ri--send-plane-line] w-5 h-5"></span>
-          </button>
+      <div class="max-w-4xl mx-auto w-full px-6">
+        <div class="message-input-wrapper">
+          <div class="message-input-card">
+            <input type="text" placeholder="输入消息..." @keyup.enter="handleSend" v-model="messageContent"
+              class="message-input" />
+            <button @click="handleSend" class="send-button" :disabled="!messageContent.trim()">
+              <span class="icon-[ri--send-plane-line] w-5 h-5"></span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -249,35 +253,92 @@ watch(() => messageList.value.length, () => {
 </script>
 
 <style scoped>
-/* 聊天输入框容器样式 */
+/* 聊天输入框容器样式 - 现代化设计 */
 .chat-input-container {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--bg-primary);
-  padding: 1rem 0;
-  border-top: 1px solid var(--border-color);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
+  background: linear-gradient(to top, var(--bg-primary) 0%, var(--bg-primary) 70%, transparent 100%);
+  padding: 1.5rem 0 2rem 0;
+  backdrop-filter: blur(8px);
   z-index: 10;
 }
 
+.message-input-wrapper {
+  position: relative;
+}
+
 .message-input-card {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: 1.5rem;
+  padding: 0.75rem 1rem;
   transition: all var(--transition-normal);
-  border-color: var(--border-color);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .message-input-card:focus-within {
   border-color: var(--color-primary);
   box-shadow:
-    0 0 0 1px var(--color-primary-hover),
-    var(--shadow-lg);
+    0 0 0 3px rgba(79, 127, 222, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
 }
 
 .message-input {
-  caret-color: var(--color-primary);
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
   font-size: 0.95rem;
+  line-height: 1.5;
+  caret-color: var(--color-primary);
   transition: all var(--transition-normal);
+  padding: 0.25rem 0;
+}
+
+.message-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: var(--color-primary);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: 50%;
+  margin-left: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 2px 8px rgba(79, 127, 222, 0.3);
+}
+
+.send-button:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(79, 127, 222, 0.4);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.send-button:disabled {
+  background-color: var(--color-secondary);
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
 }
 </style>
