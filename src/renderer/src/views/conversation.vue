@@ -20,9 +20,9 @@
     <div class="chat-input-container">
       <div class="max-w-3xl mx-auto w-full px-6">
         <div class="card p-3 flex items-center shadow-lg message-input-card">
-          <input type="text" placeholder="输入消息..."
+          <input type="text" placeholder="输入消息..." @keyup.enter="handleSend" v-model="messageContent"
             class="flex-grow bg-transparent border-none outline-none text-primary message-input" />
-          <button class="btn-primary ml-2 py-1 px-4 flex items-center gap-1">
+          <button @click="handleSend" class="btn-primary ml-2 py-1 px-4 flex items-center gap-1">
             <span>发送</span>
             <span class="icon-[ri--send-plane-line] w-5 h-5"></span>
           </button>
@@ -34,17 +34,35 @@
 
 <script setup lang="ts">
 import ChatMessageCard from '../components/ChatMessageCard.vue'
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { db } from '@renderer/stores/db';
 import { useRoute, useRouter } from 'vue-router';
 import { Conversation } from '@renderer/types/conversation';
 import { Message, MessageType } from '@renderer/types/message';
+import { v4 } from 'uuid'
+import { formatDateTime, now } from '@renderer/utils/dateUtils';
 
 const route = useRoute()
 const convertsationId = route.params.id as string
 const currentConversation = ref<Conversation>()
 const messageList = ref<Message[]>([])
+const messageContent = ref<string>('')
 const router = useRouter()
+
+const handleSend = () => {
+  if (messageContent.value.trim() === '') return
+  const message: Message = {
+    id: v4(),
+    conversationId: convertsationId,
+    content: messageContent.value,
+    createdAt: formatDateTime(now()),
+    updatedAt: formatDateTime(now()),
+    type: MessageType.QUESTION
+  }
+  db.messages.add(message)
+  messageList.value.push(message)
+  messageContent.value = ''
+}
 
 
 onMounted(async () => {
@@ -60,6 +78,12 @@ onMounted(async () => {
     messageList.value = messages
   }
 })
+
+watch(() => route.params.id, async (newId) => {
+  const messages = await db.messages.where('conversationId').equals(newId).toArray()
+  messageList.value = messages
+})
+
 </script>
 
 <style scoped>
