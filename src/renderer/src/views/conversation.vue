@@ -61,7 +61,9 @@
         <div class="flex flex-col gap-6">
           <ChatMessageCard v-for="message in sortedMessages" :key="message.id" :content="message.content"
             :timestamp="message.createdAt" :is-user-message="message.type === MessageType.QUESTION"
-            :model="currentConversation?.selectedModel" :status="message.status" />
+            :model="currentConversation?.selectedModel" :status="message.status"
+            :is-streaming="streamingMessageId === message.id && messageStatus === MessageStatus.STREAMING"
+            :message-id="message.id" @typing-complete="onMessageTypingComplete" />
         </div>
       </div>
     </div>
@@ -105,6 +107,7 @@ const messageContent = ref<string>('')
 const router = useRouter()
 const messagesContainer = ref<HTMLElement>()
 const messageStatus = ref<MessageStatus>(MessageStatus.LOADING)
+const streamingMessageId = ref<string | null>(null) // 当前正在流式输出的消息ID
 
 // 计算属性：确保消息按时间排序，使用更精确的排序逻辑
 const sortedMessages = computed(() => {
@@ -176,6 +179,14 @@ const toggleSettings = () => {
   console.log('打开对话设置')
 }
 
+// 处理消息打字完成事件
+const onMessageTypingComplete = (messageId: string) => {
+  // 如果完成的是当前流式消息，清除流式状态
+  if (streamingMessageId.value === messageId) {
+    streamingMessageId.value = null
+  }
+}
+
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
 
@@ -222,6 +233,9 @@ const handleSend = async () => {
   }
   db.messages.add(streamingMessage)
   messageList.value.push(streamingMessage)
+
+  // 设置当前流式消息ID
+  streamingMessageId.value = streamingMessage.id
 
   // 再次滚动到底部显示loading消息
   scrollToBottom()
@@ -288,6 +302,7 @@ onMounted(async () => {
       if (data.data.is_end) {
         message.status = MessageStatus.FINISHED
         messageStatus.value = MessageStatus.FINISHED
+        // 注意：不要立即清除 streamingMessageId，等待打字机效果完成
       } else {
         message.status = MessageStatus.STREAMING
       }

@@ -18,6 +18,11 @@
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
+        <div v-else-if="shouldShowTypewriter && content" class="typewriter-container">
+          <TypewriterText :text="content" :speed="30" :is-complete="status === MessageStatus.FINISHED"
+            @typing-complete="onTypingComplete" />
+          <span v-if="!isTypingComplete" class="typing-cursor">|</span>
+        </div>
         <div v-else>
           <slot>{{ content }}</slot>
         </div>
@@ -27,20 +32,59 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatTime } from '../utils/dateUtils';
 import { MessageStatus } from '../types/message';
+import TypewriterText from './TypewriterText.vue';
 
-defineProps<{
+const props = defineProps<{
   content: string;
   timestamp: string;
   model?: string;
   isUserMessage: boolean;
   status?: MessageStatus;
+  isStreaming?: boolean;
+  messageId?: string;
 }>();
 
+const isTypingComplete = ref(false)
+
 // 计算是否为加载状态
-const isLoading = computed(() => status === MessageStatus.LOADING || status === MessageStatus.STREAMING);
+const isLoading = computed(() => props.status === MessageStatus.LOADING)
+
+// 计算是否应该显示打字机效果 - 只在实时流式输出时显示
+const shouldShowTypewriter = computed(() => {
+  return props.isStreaming &&
+    (props.status === MessageStatus.STREAMING ||
+      (props.status === MessageStatus.FINISHED && !isTypingComplete.value)) &&
+    !props.isUserMessage
+})
+
+// 当消息状态变化时重置打字完成状态
+watch(() => props.content, () => {
+  if (props.status === MessageStatus.STREAMING && props.isStreaming) {
+    isTypingComplete.value = false
+  }
+})
+
+// 当不再是流式状态时，立即完成打字
+watch(() => props.isStreaming, (newIsStreaming) => {
+  if (!newIsStreaming) {
+    isTypingComplete.value = true
+  }
+})
+
+const emit = defineEmits<{
+  'typing-complete': [messageId: string]
+}>()
+
+const onTypingComplete = () => {
+  isTypingComplete.value = true
+  // 通知父组件打字完成，传递消息ID
+  if (props.messageId) {
+    emit('typing-complete', props.messageId)
+  }
+}
 </script>
 
 <style scoped>
@@ -205,6 +249,33 @@ const isLoading = computed(() => status === MessageStatus.LOADING || status === 
 
   50% {
     opacity: 0.95;
+  }
+}
+
+/* 打字机效果样式 */
+.typewriter-container {
+  position: relative;
+  display: inline-block;
+}
+
+.typing-cursor {
+  display: inline-block;
+  color: var(--color-primary);
+  font-weight: 400;
+  animation: cursor-blink 1s infinite;
+  margin-left: 1px;
+}
+
+@keyframes cursor-blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
   }
 }
 </style>
