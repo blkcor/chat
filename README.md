@@ -4,7 +4,10 @@ An Chat application.
 
 ## BUG FIX
 
-- [ ] the ui will block when outputing mass messages.
+- [x] the ui will block when outputing mass messages.
+- [ ] responsive conversation list while adding new conversation.
+- [ ] typeWrite component cursor position.
+- [ ] auto focus to the input when opening a new conversation.
 
 ## Feature ADD
 
@@ -12,4 +15,4 @@ An Chat application.
 - [ ] support file upload.
 - [ ] support image recognize and answer based on that.
 - [ ] support mcp.
-- [ ] support ssr with a fuck new interreaction.
+- [ ] support ssr with a awesome new interreaction.

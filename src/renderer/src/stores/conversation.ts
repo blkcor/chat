@@ -136,6 +136,7 @@ export const useConversationStore = defineStore('conversation', () => {
 
     // 更新消息内容
     message.content += content
+    console.log(`Updating message ${messageId} content:`, message.content)
     message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
     // 根据是否结束更新状态
@@ -154,9 +155,6 @@ export const useConversationStore = defineStore('conversation', () => {
       updatedAt: message.updatedAt,
       status: message.status
     })
-
-    // 触发响应式更新
-    messageList.value[messageIndex] = { ...message }
   }
 
   const onTypingComplete = (messageId: string) => {
