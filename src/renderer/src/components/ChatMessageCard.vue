@@ -19,7 +19,7 @@
           <span class="dot"></span>
         </div>
         <div v-else-if="shouldShowTypewriter && content" class="typewriter-container">
-          <TypewriterText ref="typewriterRef" :text="content" :speed="20"
+          <TypewriterText ref="typewriterRef" :text="content" :speed="50"
             :is-complete="status === MessageStatus.FINISHED" @typing-complete="onTypingComplete" />
           <span v-if="shouldShowCursor" class="typing-cursor">|</span>
         </div>
@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { formatTime } from '../utils/dateUtils';
 import { MessageStatus } from '../types/message';
 import TypewriterText from './TypewriterText.vue';
@@ -52,7 +52,7 @@ const props = defineProps<{
 }>();
 
 const isTypingComplete = ref(false)
-const typewriterRef = ref()
+const typewriterRef = useTemplateRef('typewriterRef')
 
 // 计算是否为加载状态
 const isLoading = computed(() => props.status === MessageStatus.LOADING)

@@ -13,6 +13,8 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateConversationId } from '@renderer/utils/idUtils'
 import { now } from '@renderer/utils/dateUtils'
+import { useConversationStore } from '@renderer/stores'
+import { Conversation } from '@renderer/types/conversation'
 
 const router = useRouter()
 const modelValue = ref<{
@@ -20,6 +22,7 @@ const modelValue = ref<{
   model: string
 } | null>(null)
 const providers = ref<Provider[]>([])
+const conversationStore = useConversationStore()
 
 const handleStartChat = async () => {
   // 校验参数
@@ -32,14 +35,16 @@ const handleStartChat = async () => {
   const conversationId = generateConversationId()
   const currentTime = now()
 
-  await db.conversations.add({
+  const newConversation: Conversation = {
     id: conversationId,
     title: '新的对话',
     selectedModel: modelValue.value?.model,
     createdAt: currentTime,
     updatedAt: currentTime,
     providerId: modelValue.value?.providerId
-  })
+  }
+
+  await conversationStore.createConversation(newConversation)
 
   // 跳转到新创建的对话
   router.push(`/conversation/${conversationId}`)

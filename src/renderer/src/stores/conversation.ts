@@ -28,8 +28,7 @@ export const useConversationStore = defineStore('conversation', () => {
         if (a.type === MessageType.ANSWER && b.type === MessageType.QUESTION) {
           return 1
         }
-        // 如果类型也相同，使用ID排序确保稳定性
-        return a.id.localeCompare(b.id)
+        return 1
       }
 
       return timeA - timeB
@@ -42,6 +41,9 @@ export const useConversationStore = defineStore('conversation', () => {
   const loadConversations = async () => {
     try {
       const conversationList = await db.conversations.toArray()
+      conversationList.sort((c1, c2) => {
+        return c1.createdAt < c2.createdAt ? 1 : -1
+      })
       conversations.value = conversationList
     } catch (error) {
       console.error('Failed to load conversations:', error)
@@ -81,6 +83,11 @@ export const useConversationStore = defineStore('conversation', () => {
       console.error('Failed to load conversation:', error)
       throw error
     }
+  }
+
+  const createConversation = async (conversation: Conversation) => {
+    conversations.value.push(conversation)
+    return await db.conversations.add(conversation)
   }
 
   const createMessage = async (content: string, conversationId: string): Promise<Message> => {
@@ -240,6 +247,7 @@ export const useConversationStore = defineStore('conversation', () => {
     // Actions
     loadConversations,
     loadConversation,
+    createConversation,
     createMessage,
     createStreamingMessage,
     updateStreamingMessage,
