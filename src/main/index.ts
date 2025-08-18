@@ -31,10 +31,6 @@ function createWindow(): void {
           {
             messages: [
               {
-                role: 'assistant',
-                content: '使用markdown格式输出所有内容'
-              },
-              {
                 role: 'user',
                 content
               }
@@ -62,12 +58,12 @@ function createWindow(): void {
               mainWindow.webContents.send('stream-message', streamData)
 
               // 如果是结束标志，跳出循环
-              // if (is_end) {
-              //   break
-              // }
+              if (is_end) {
+                break
+              }
 
               // 让出控制权，避免阻塞
-              // await new Promise((resolve) => setImmediate(resolve))
+              await new Promise((resolve) => setImmediate(resolve))
             }
           } catch (streamError) {
             console.error('Stream processing error:', streamError)
@@ -133,7 +129,7 @@ app.whenReady().then(() => {
     // 添加自定义快捷键
     if (is.dev) {
       // F12 切换开发者工具
-      window.webContents.on('before-input-event', (event, input) => {
+      window.webContents.on('before-input-event', (_event, input) => {
         if (input.key === 'F12') {
           if (window.webContents.isDevToolsOpened()) {
             window.webContents.closeDevTools()
