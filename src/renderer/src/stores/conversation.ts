@@ -13,6 +13,7 @@ export const useConversationStore = defineStore('conversation', () => {
   const messageList = ref<Message[]>([])
   const messageStatus = ref<MessageStatus>(MessageStatus.FINISHED)
   const streamingMessageId = ref<string | null>(null)
+  const typingFinished = ref<boolean>(false)
 
   // 计算属性
   const sortedMessages = computed(() => {
@@ -232,6 +233,10 @@ export const useConversationStore = defineStore('conversation', () => {
     }
   }
 
+  const setTypingFinished = (finished: boolean) => {
+    typingFinished.value = finished
+  }
+
   return {
     // State
     conversations,
@@ -239,6 +244,7 @@ export const useConversationStore = defineStore('conversation', () => {
     messageList,
     messageStatus,
     streamingMessageId,
+    typingFinished,
 
     // Computed
     sortedMessages,
@@ -254,6 +260,7 @@ export const useConversationStore = defineStore('conversation', () => {
     onTypingComplete,
     clearConversation,
     clearCurrentConversation,
-    updateConversationTitleIfFirst
+    updateConversationTitleIfFirst,
+    setTypingFinished
   }
 })

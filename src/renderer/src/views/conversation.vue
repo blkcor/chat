@@ -151,9 +151,9 @@
               class="message-input" rows="1" ref="messageInputRef"></textarea>
 
             <button @click="handleSend" class="send-button"
-              :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING">
+              :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING && !conversationStore.typingFinished">
               <span
-                :class="conversationStore.messageStatus !== MessageStatus.STREAMING ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
+                :class="conversationStore.messageStatus !== MessageStatus.STREAMING && !conversationStore.typingFinished ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
                 class="w-5 h-5" />
             </button>
           </div>
@@ -334,6 +334,7 @@ onMounted(async () => {
       )
 
       // 如果是流式消息，滚动到底部
+      // TODO: 如果用户移动滚动条 停止滚动到底部
       if (conversationStore.messageStatus === MessageStatus.STREAMING) {
         scrollToBottom()
       }

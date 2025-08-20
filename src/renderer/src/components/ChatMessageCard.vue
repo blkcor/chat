@@ -2,9 +2,6 @@
   <div class="chat-message" :class="{ 'user-message': isUserMessage, 'loading-message': isLoading }">
     <div class="avatar" :class="{ 'user-avatar': isUserMessage, 'loading-avatar': isLoading }">
       <span v-if="isUserMessage">U</span>
-      <span v-else-if="isLoading" class="loading-spinner">
-        <span class="icon-[eos-icons--loading] w-5 h-5 animate-spin"></span>
-      </span>
       <span v-else>A</span>
     </div>
     <div class="message-content">
@@ -19,9 +16,8 @@
           <span class="dot"></span>
         </div>
         <div v-else-if="shouldShowTypewriter && content" class="typewriter-container">
-          <TypewriterText ref="typewriterRef" :text="content" :speed="50"
-            :is-complete="status === MessageStatus.FINISHED" @typing-complete="onTypingComplete" />
-          <span v-if="shouldShowCursor" class="typing-cursor">|</span>
+          <TypewriterText :text="content" :speed="10" :is-complete="status === MessageStatus.FINISHED"
+            @typing-complete="onTypingComplete" />
         </div>
         <div v-else-if="content">
           <MarkdownMessage :content="content" />
@@ -35,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatTime } from '../utils/dateUtils';
 import { MessageStatus } from '../types/message';
 import TypewriterText from './TypewriterText.vue';
@@ -52,7 +48,6 @@ const props = defineProps<{
 }>();
 
 const isTypingComplete = ref(false)
-const typewriterRef = useTemplateRef('typewriterRef')
 
 // 计算是否为加载状态
 const isLoading = computed(() => props.status === MessageStatus.LOADING)
@@ -66,18 +61,6 @@ const shouldShowTypewriter = computed(() => {
     props.content.length > 0
 })
 
-// 计算是否应该显示光标
-const shouldShowCursor = computed(() => {
-  if (!shouldShowTypewriter.value) return false
-
-  // 如果TypewriterText组件存在且已经完成打字，不显示光标
-  if (typewriterRef.value?.isTypingFinished) return false
-
-  // 如果整体打字完成，不显示光标
-  if (isTypingComplete.value) return false
-
-  return true
-})
 
 // 当消息状态变化时重置打字完成状态
 watch(() => props.content, (newContent, oldContent) => {
@@ -297,27 +280,6 @@ const onTypingComplete = () => {
   word-wrap: break-word;
 }
 
-.typing-cursor {
-  display: inline;
-  color: var(--color-primary);
-  font-weight: 400;
-  animation: cursor-blink 1s infinite;
-  margin-left: 2px;
-  vertical-align: baseline;
-}
-
-@keyframes cursor-blink {
-
-  0%,
-  50% {
-    opacity: 1;
-  }
-
-  51%,
-  100% {
-    opacity: 0;
-  }
-}
 
 /* 响应式设计 */
 @media (max-width: 768px) {

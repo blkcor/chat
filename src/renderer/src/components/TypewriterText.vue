@@ -3,14 +3,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onUnmounted } from 'vue'
+import { ref, watch, computed, onUnmounted, watchEffect } from 'vue'
 import { renderMarkdown, copyCodeToClipboard } from '@renderer/utils/markdown'
+import { useConversationStore } from '@renderer/stores';
 
 const props = defineProps<{
   text: string
   speed?: number // 打字速度，毫秒
   isComplete?: boolean // 是否已经完成流式传输
 }>()
+
+const conversationStore = useConversationStore()
 
 const emit = defineEmits<{
   'typing-complete': []
@@ -22,15 +25,18 @@ let animationId: number | null = null
 let lastUpdateTime = 0
 let hasEmittedComplete = false
 
-// 暴露打字完成状态给父组件
-defineExpose({
-  isTypingFinished
-})
 
 const formattedText = computed(() => {
   const text = props.text.slice(0, displayedLength.value)
   // 渲染markdown
-  return renderMarkdown(text)
+  const rendered = renderMarkdown(text)
+
+  // 如果还在打字过程中且没有完成，在末尾添加光标
+  if (displayedLength.value < props.text.length || !props.isComplete) {
+    return rendered + '<span class="typewriter-cursor">|</span>'
+  }
+
+  return rendered
 })
 
 const animate = (currentTime: number) => {
@@ -139,7 +145,11 @@ watch(() => props.isComplete, (isComplete) => {
   }
 })
 
-
+watchEffect(() => {
+  if (displayedLength.value >= props.text.length && props.isComplete) {
+    conversationStore.setTypingFinished(true)
+  }
+})
 
 onUnmounted(() => {
   if (animationId) {
@@ -155,9 +165,28 @@ onUnmounted(() => {
   overflow-wrap: break-word;
   word-wrap: break-word;
 }
-</style>
 
-<style>
+.typewriter-cursor {
+  color: var(--color-primary);
+  font-weight: 400;
+  animation: cursor-blink 1s infinite;
+  margin-left: 2px;
+  vertical-align: baseline;
+}
+
+@keyframes cursor-blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
 /* 确保TypewriterText中的代码块样式正确应用 */
 .typewriter-text .code-block-wrapper {
   margin: 1rem 0;
