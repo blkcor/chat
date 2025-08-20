@@ -136,32 +136,37 @@ export const useConversationStore = defineStore('conversation', () => {
     return streamingMessage
   }
 
-  const updateStreamingMessage = async (messageId: string, content: string, isEnd: boolean) => {
+  const updateStreamingMessage = (messageId: string, content: string, isEnd: boolean) => {
     const messageIndex = messageList.value.findIndex((msg) => msg.id === messageId)
     if (messageIndex === -1) return
 
     const message = messageList.value[messageIndex]
 
-    // 更新消息内容
+    // 立即更新UI状态 - 这是最重要的，不能被阻塞
     message.content += content
-    console.log(`Updating message ${messageId} content:`, message.content)
+    console.log(`Updating message ${messageId} content length:`, message.content.length)
     message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
     // 根据是否结束更新状态
     if (isEnd) {
       message.status = MessageStatus.FINISHED
       messageStatus.value = MessageStatus.FINISHED
-      // 流式传输结束，但保持streamingMessageId直到打字机效果完成
     } else {
       message.status = MessageStatus.STREAMING
       messageStatus.value = MessageStatus.STREAMING
     }
 
-    // 更新数据库
-    await db.messages.update(message.id, {
-      content: message.content,
-      updatedAt: message.updatedAt,
-      status: message.status
+    // 异步更新数据库，不阻塞UI - 使用微任务队列
+    Promise.resolve().then(() => {
+      db.messages
+        .update(message.id, {
+          content: message.content,
+          updatedAt: message.updatedAt,
+          status: message.status
+        })
+        .catch((error) => {
+          console.error('Failed to update message in DB:', error)
+        })
     })
   }
 

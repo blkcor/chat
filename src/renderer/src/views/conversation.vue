@@ -189,10 +189,17 @@ const selectedCategory = ref('coding')
 const conversationStore = useConversationStore()
 
 // 滚动到底部
-const scrollToBottom = async () => {
+const scrollToBottom = async (smooth = false) => {
   await nextTick()
   if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    if (smooth) {
+      messagesContainer.value.scrollTo({
+        top: messagesContainer.value.scrollHeight,
+        behavior: 'smooth'
+      })
+    } else {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
   }
 }
 
@@ -323,20 +330,23 @@ onMounted(async () => {
   }
 
   // 监听流式消息
-  window.chatAPI.streamMessage(async (data: StreamableData) => {
+  window.chatAPI.streamMessage((data: StreamableData) => {
     console.log('Renderer received stream data:', data)
 
     try {
-      await conversationStore.updateStreamingMessage(
+      // 同步更新消息内容 - 现在是同步的，不会阻塞
+      conversationStore.updateStreamingMessage(
         data.messageId,
         data.data.result || '',
         data.data.is_end
       )
 
-      // 如果是流式消息，滚动到底部
-      // TODO: 如果用户移动滚动条 停止滚动到底部
+      // 如果是流式消息，滚动到底部以跟随内容
       if (conversationStore.messageStatus === MessageStatus.STREAMING) {
-        scrollToBottom()
+        // 使用requestAnimationFrame确保滚动不阻塞渲染
+        requestAnimationFrame(() => {
+          scrollToBottom(false)
+        })
       }
     } catch (error) {
       console.error('Error updating streaming message:', error)

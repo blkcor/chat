@@ -50,11 +50,12 @@ function createWindow(): void {
               const streamData: StreamableData = {
                 data: {
                   is_end,
-                  result
+                  result: result || ''
                 },
                 messageId
               }
 
+              // 立即发送数据，不等待
               mainWindow.webContents.send('stream-message', streamData)
 
               // 如果是结束标志，跳出循环
@@ -62,8 +63,8 @@ function createWindow(): void {
                 break
               }
 
-              // 让出控制权，避免阻塞
-              await new Promise((resolve) => setImmediate(resolve))
+              // 让出控制权，避免阻塞 - 使用更短的延迟
+              await new Promise((resolve) => setTimeout(resolve, 1))
             }
           } catch (streamError) {
             console.error('Stream processing error:', streamError)

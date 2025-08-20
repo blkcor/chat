@@ -31,10 +31,6 @@ const formattedText = computed(() => {
   // 渲染markdown
   const rendered = renderMarkdown(text)
 
-  // 如果还在打字过程中且没有完成，在末尾添加光标
-  if (displayedLength.value < props.text.length || !props.isComplete) {
-    return rendered + '<span class="typewriter-cursor">|</span>'
-  }
 
   return rendered
 })
@@ -166,26 +162,6 @@ onUnmounted(() => {
   word-wrap: break-word;
 }
 
-.typewriter-cursor {
-  color: var(--color-primary);
-  font-weight: 400;
-  animation: cursor-blink 1s infinite;
-  margin-left: 2px;
-  vertical-align: baseline;
-}
-
-@keyframes cursor-blink {
-
-  0%,
-  50% {
-    opacity: 1;
-  }
-
-  51%,
-  100% {
-    opacity: 0;
-  }
-}
 
 /* 确保TypewriterText中的代码块样式正确应用 */
 .typewriter-text .code-block-wrapper {
