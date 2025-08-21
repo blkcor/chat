@@ -1,98 +1,54 @@
 import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
-import 'highlight.js/styles/github-dark.css'
+import Shiki from '@shikijs/markdown-it'
+import type { Token } from 'markdown-it'
 
 // 创建 markdown-it 实例
 const md = new MarkdownIt({
   html: true,
   linkify: true,
-  typographer: true,
-  highlight: function (str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        const highlighted = hljs.highlight(str, { language: lang }).value
-        return `<pre class="hljs-code-block" data-lang="${lang}"><code class="hljs language-${lang}">${highlighted}</code></pre>`
-      } catch (err) {
-        console.log(err)
-      }
-    }
-
-    return `<pre class="hljs-code-block"><code class="hljs">${md.utils.escapeHtml(str)}</code></pre>`
-  }
+  typographer: true
 })
 
-// 自定义代码块渲染规则，添加复制按钮
-md.renderer.rules.code_block = function (tokens: any, idx: any) {
-  const token = tokens[idx]
-  const content = token.content
-  const lang = token.info || ''
+// 先添加 Shiki 插件
+md.use(
+  await Shiki({
+    themes: {
+      light: 'vitesse-light',
+      dark: 'vitesse-dark'
+    },
+    defaultColor: false
+  })
+)
 
-  if (lang && hljs.getLanguage(lang)) {
-    try {
-      const highlighted = hljs.highlight(content, { language: lang }).value
-      return `
-        <div class="code-block-wrapper" data-code="${md.utils.escapeHtml(content)}">
-          <div class="code-block-header">
-            <span class="code-lang">${lang}</span>
-            <button class="copy-code-btn" title="复制代码">
-              <span class="icon-[ri--file-copy-line] w-4 h-4"></span>
-            </button>
-          </div>
-          <pre class="hljs-code-block" data-lang="${lang}"><code class="hljs language-${lang}">${highlighted}</code></pre>
-        </div>
-      `
-    } catch {
-      // ignore
-    }
-  }
-
-  return `
-    <div class="code-block-wrapper" data-code="${md.utils.escapeHtml(content)}">
-      <div class="code-block-header">
-        <span class="code-lang">text</span>
-        <button class="copy-code-btn" title="复制代码">
-          <span class="icon-[ri--file-copy-line] w-4 h-4"></span>
-        </button>
-      </div>
-      <pre class="hljs-code-block"><code class="hljs">${md.utils.escapeHtml(content)}</code></pre>
-    </div>
-  `
-}
+// 在 Shiki 插件添加后，保存原始渲染器引用
+const originalFenceRenderer = md.renderer.rules.fence
 
 // 自定义围栏代码块渲染规则
-md.renderer.rules.fence = function (tokens: any, idx: any) {
+md.renderer.rules.fence = function (
+  tokens: Token[],
+  idx: number,
+  options: MarkdownIt.Options,
+  env: any,
+  self: MarkdownIt.Renderer
+) {
   const token = tokens[idx]
-  const content = token.content
   const lang = token.info.trim() || 'text'
+  const code = token.content
 
-  if (lang && hljs.getLanguage(lang)) {
-    try {
-      const highlighted = hljs.highlight(content, { language: lang }).value
-      return `
-        <div class="code-block-wrapper" data-code="${md.utils.escapeHtml(content)}">
-          <div class="code-block-header">
-            <span class="code-lang">${lang}</span>
-            <button class="copy-code-btn" title="复制代码">
-              <span class="icon-[ri--file-copy-line] w-4 h-4"></span>
-            </button>
-          </div>
-          <pre class="hljs-code-block" data-lang="${lang}"><code class="hljs language-${lang}">${highlighted}</code></pre>
-        </div>
-      `
-    } catch {
-      // ignore
-    }
-  }
+  // 使用 Shiki 渲染代码
+  const highlighted = originalFenceRenderer
+    ? originalFenceRenderer(tokens, idx, options, env, self)
+    : `<pre><code class="language-${lang}">${md.utils.escapeHtml(code)}</code></pre>`
 
   return `
-    <div class="code-block-wrapper" data-code="${md.utils.escapeHtml(content)}">
+    <div class="code-block-wrapper" data-code="${md.utils.escapeHtml(code)}">
       <div class="code-block-header">
         <span class="code-lang">${lang}</span>
         <button class="copy-code-btn" title="复制代码">
           <span class="icon-[ri--file-copy-line] w-4 h-4"></span>
         </button>
       </div>
-      <pre class="hljs-code-block"><code class="hljs">${md.utils.escapeHtml(content)}</code></pre>
+      <div class="shiki-wrapper">${highlighted}</div>
     </div>
   `
 }

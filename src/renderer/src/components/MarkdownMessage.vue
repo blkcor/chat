@@ -5,16 +5,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
 import { renderMarkdown, copyCodeToClipboard } from '@renderer/utils/markdown'
 
 const props = defineProps<{
   content: string
 }>()
 
-const renderedContent = computed(() => {
-  return renderMarkdown(props.content)
-})
+const renderedContent = ref('')
+
+// 异步渲染 markdown
+const renderContent = async () => {
+  if (props.content) {
+    try {
+      renderedContent.value = await renderMarkdown(props.content)
+    } catch (error) {
+      console.error('Markdown rendering error:', error)
+      renderedContent.value = props.content
+    }
+  } else {
+    renderedContent.value = ''
+  }
+}
+
+// 监听内容变化
+watch(() => props.content, renderContent, { immediate: true })
 
 // 处理点击事件，特别是复制按钮
 const handleClick = async (event: Event) => {
@@ -135,44 +150,51 @@ const handleClick = async (event: Event) => {
   border-color: var(--color-success);
 }
 
-.hljs-code-block {
-  margin: 0;
-  padding: 1rem;
-  background: var(--bg-primary);
+/* Shiki 主题支持 */
+.shiki-wrapper {
+  overflow-x: auto;
+}
+
+.shiki-wrapper pre {
+  margin: 0 !important;
+  padding: 1rem !important;
+  background: transparent !important;
   overflow-x: auto;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   font-size: 0.875rem;
   line-height: 1.5;
   max-width: 100%;
-  white-space: pre;
-  word-wrap: normal;
-  word-break: normal;
 }
 
-.hljs-code-block code {
-  background: transparent;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
+/* 确保 Shiki 主题正确切换 */
+html.dark .shiki,
+html.dark .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+html:not(.dark) .shiki,
+html:not(.dark) .shiki span {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg) !important;
 }
 
 /* 自定义滚动条 */
-.hljs-code-block::-webkit-scrollbar {
+.shiki-wrapper::-webkit-scrollbar {
   height: 8px;
 }
 
-.hljs-code-block::-webkit-scrollbar-track {
+.shiki-wrapper::-webkit-scrollbar-track {
   background: var(--bg-secondary);
   border-radius: 4px;
 }
 
-.hljs-code-block::-webkit-scrollbar-thumb {
+.shiki-wrapper::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 4px;
 }
 
-.hljs-code-block::-webkit-scrollbar-thumb:hover {
+.shiki-wrapper::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
 }
 
@@ -185,9 +207,9 @@ const handleClick = async (event: Event) => {
     border-right: none;
   }
 
-  .hljs-code-block {
-    padding: 0.75rem 1rem;
-    font-size: 0.8rem;
+  .shiki-wrapper pre {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.8rem !important;
   }
 
   .code-block-header {
@@ -219,7 +241,7 @@ const handleClick = async (event: Event) => {
   white-space: pre-wrap;
 }
 
-.markdown-content .hljs-code-block code {
+.markdown-content .shiki-wrapper code {
   word-break: normal;
   white-space: pre;
 }
