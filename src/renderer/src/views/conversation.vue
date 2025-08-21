@@ -286,12 +286,24 @@ const handleSend = async () => {
       return
     }
 
+    // 准备对话历史 - 转换为大模型需要的格式
+    const conversationHistory = conversationStore.sortedMessages
+      .filter(msg => msg.content.trim() !== '') // 过滤空消息
+      .slice(-10) // 只取最近10条消息避免token过多
+      .map(msg => ({
+        role: msg.type === MessageType.QUESTION ? 'user' as const : 'assistant' as const,
+        content: msg.content
+      }))
+
+    console.log('Sending conversation history:', conversationHistory)
+
     // 发送消息到主进程
     const sendData = {
       content: questionMessage.content,
       providerName: providerInfo?.name || '',
       model: conversationStore.currentConversation?.selectedModel || '',
-      messageId: streamingMessage.id
+      messageId: streamingMessage.id,
+      conversationHistory // 包含对话历史
     }
 
     console.log('Sending question to main process:', sendData)

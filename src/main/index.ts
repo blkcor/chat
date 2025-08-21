@@ -21,7 +21,7 @@ function createWindow(): void {
   })
 
   ipcMain.on('send-question', async (_event, data: SendMessage) => {
-    const { content, providerName, model, messageId } = data
+    const { content, providerName, model, messageId, conversationHistory = [] } = data
 
     if (providerName === 'qianfan') {
       try {
@@ -30,6 +30,7 @@ function createWindow(): void {
         const stream = await client.chat(
           {
             messages: [
+              ...conversationHistory, // 包含历史对话
               {
                 role: 'user',
                 content

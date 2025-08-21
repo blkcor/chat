@@ -1,8 +1,14 @@
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export interface SendMessage {
   content: string
   providerName: string
   model: string
   messageId: string
+  conversationHistory?: ChatMessage[] // 添加对话历史
 }
 
 export interface StreamableData {
