@@ -15,9 +15,10 @@
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
+
         <div v-else-if="content" class="message-content-wrapper" :class="{
-          'content-appear': isContentReady,
-          'content-finished': props.status === MessageStatus.FINISHED
+          'content-appear': isContentReady && status === MessageStatus.STREAMING,
+          'no-animation': !isActiveStreaming
         }">
           <MarkdownMessage :content="content" />
         </div>
@@ -46,35 +47,50 @@ const props = defineProps<{
 }>();
 
 // 计算是否为加载状态
-const isLoading = computed(() => props.status !== MessageStatus.FINISHED)
+const isLoading = computed(() => props.status === MessageStatus.STREAMING)
 
 // 内容准备状态 - 用于触发过渡动画
-const isContentReady = ref(false)
+const isContentReady = ref(true) // 默认为true，历史消息直接显示
 
-// 监听内容变化，在内容更新时触发动画
-watch(() => props.content, async (newContent, oldContent) => {
-  if (newContent && newContent !== oldContent) {
-    if (!isContentReady.value) {
-      // 首次显示内容时，稍微延迟以创建更好的视觉效果
-      await nextTick()
-      setTimeout(() => {
-        isContentReady.value = true
-      }, props.status === MessageStatus.FINISHED ? 100 : 50)
-    } else if (props.status === MessageStatus.STREAMING) {
-      // 流式消息已经在显示状态，保持显示
+// 判断是否为正在进行的新流式消息
+const isActiveStreaming = computed(() => {
+  return props.status === MessageStatus.STREAMING && props.isStreaming
+})
+
+// 监听内容和状态变化
+watch([() => props.content, () => props.status, () => props.isStreaming],
+  ([newContent, newStatus, isStreaming], [wasStreaming]) => {
+    // 用户消息总是直接显示
+    if (props.isUserMessage) {
+      isContentReady.value = true
+      return
+    }
+
+    // 历史消息（已完成的消息）总是直接显示
+    if (newStatus === MessageStatus.FINISHED && newContent) {
+      isContentReady.value = true
+      return
+    }
+
+    // 新开始的流式消息才需要动画
+    if (newStatus === MessageStatus.STREAMING && isStreaming && !wasStreaming) {
+      // 重置状态，准备动画
+      isContentReady.value = false
+      nextTick(() => {
+        setTimeout(() => {
+          isContentReady.value = true
+        }, 50)
+      })
+      return
+    }
+
+    // 其他情况直接显示
+    if (newContent) {
       isContentReady.value = true
     }
-  }
-}, { immediate: true })
-
-// 监听状态变化，优化动画状态
-watch(() => props.status, (newStatus, oldStatus) => {
-  if (newStatus === MessageStatus.STREAMING && oldStatus !== MessageStatus.STREAMING) {
-    // 开始流式传输时重置状态
-    isContentReady.value = false
-  }
-  // 完成状态的改变会通过模板的class绑定自动处理
-})
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped>
@@ -267,6 +283,20 @@ watch(() => props.status, (newStatus, oldStatus) => {
   transform: translateY(0) scale(1);
   max-height: 2000px;
   /* 足够大的值 */
+}
+
+/* 历史消息无动画 */
+.message-content-wrapper.no-animation {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1) !important;
+  max-height: none !important;
+  transition: none !important;
+  overflow: visible !important;
+}
+
+.message-content-wrapper.no-animation.content-appear {
+  /* 覆盖动画效果 */
+  transition: none !important;
 }
 
 
