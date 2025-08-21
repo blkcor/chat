@@ -1,5 +1,7 @@
 <template>
-  <div class="markdown-content" v-html="renderedContent" @click="handleClick"></div>
+  <div
+    class="prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-800 dark:prose-p:text-gray-200 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-blue-500 prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-em:text-gray-600 dark:prose-em:text-gray-400"
+    v-html="renderedContent" @click="handleClick"></div>
 </template>
 
 <script setup lang="ts">
@@ -49,74 +51,11 @@ const handleClick = async (event: Event) => {
 </script>
 
 <style scoped>
-.markdown-content {
-  line-height: 1.6;
-  color: var(--text-primary);
-}
-
-/* 全局样式，不使用 scoped */
+/* Typography插件会处理大部分文本样式，这里只保留必要的自定义样式 */
 </style>
 
 <style>
-/* Markdown 内容样式 */
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
-  margin: 1.5rem 0 1rem 0;
-  font-weight: 600;
-  line-height: 1.3;
-  color: var(--text-primary);
-}
-
-.markdown-content h1 {
-  font-size: 1.5rem;
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 0.5rem;
-}
-
-.markdown-content h2 {
-  font-size: 1.3rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.3rem;
-}
-
-.markdown-content h3 {
-  font-size: 1.1rem;
-}
-
-.markdown-content p {
-  margin: 1rem 0;
-  line-height: 1.6;
-}
-
-.markdown-content ul,
-.markdown-content ol {
-  margin: 1rem 0;
-  padding-left: 2rem;
-}
-
-.markdown-content li {
-  margin: 0.5rem 0;
-  line-height: 1.5;
-}
-
-.markdown-content blockquote {
-  margin: 1rem 0;
-  padding: 0.5rem 1rem;
-  border-left: 4px solid var(--color-primary);
-  background: var(--bg-accent);
-  border-radius: 0 0.5rem 0.5rem 0;
-}
-
-.markdown-content blockquote p {
-  margin: 0.5rem 0;
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
+/* 保留代码块和表格的自定义样式，因为这些需要特殊处理 */
 .markdown-content table {
   width: 100%;
   border-collapse: collapse;
@@ -141,37 +80,6 @@ const handleClick = async (event: Event) => {
 
 .markdown-content tr:hover {
   background: var(--bg-accent);
-}
-
-.markdown-content a {
-  color: var(--color-primary);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: all var(--transition-normal);
-}
-
-.markdown-content a:hover {
-  border-bottom-color: var(--color-primary);
-}
-
-.markdown-content strong {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.markdown-content em {
-  font-style: italic;
-  color: var(--text-secondary);
-}
-
-.markdown-content code {
-  background: var(--bg-secondary);
-  color: var(--color-primary);
-  padding: 0.2rem 0.4rem;
-  border-radius: 0.25rem;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.85em;
-  border: 1px solid var(--border-color);
 }
 
 /* 代码块样式 */
@@ -314,18 +222,5 @@ const handleClick = async (event: Event) => {
 .markdown-content .hljs-code-block code {
   word-break: normal;
   white-space: pre;
-}
-
-/* 深色模式下的代码高亮调整 */
-.dark .hljs-code-block {
-  background: #1e1e1e;
-}
-
-.dark .code-block-wrapper {
-  background: #2d2d2d;
-}
-
-.dark .code-block-header {
-  background: #3d3d3d;
 }
 </style>

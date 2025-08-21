@@ -24,6 +24,7 @@
     "@baiducloud/qianfan": "^0.2.3",
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.11",
     "@types/markdown-it": "^14.1.2",
     "dayjs": "^1.11.13",
