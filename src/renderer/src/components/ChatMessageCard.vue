@@ -3,18 +3,14 @@
     isUserMessage
       ? 'bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 flex-row-reverse text-right border-blue-200/50 dark:border-blue-700/30'
       : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
-    isLoading
-      ? 'bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/10 border-amber-200/50 dark:border-amber-700/30 animate-pulse'
-      : 'hover:shadow-lg hover:-translate-y-0.5 shadow-sm'
+    , 'hover:shadow-lg hover:-translate-y-0.5 shadow-sm'
   ]">
     <div
       class="w-11 h-11 rounded-xl flex items-center justify-center font-semibold text-sm flex-shrink-0 border-2 border-white dark:border-gray-900 transition-all duration-300"
       :class="[
         isUserMessage
           ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-          : isLoading
-            ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30'
-            : 'bg-gradient-to-br from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-500/20'
+          : 'bg-gradient-to-br from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-500/20'
       ]">
       <span v-if="isUserMessage">U</span>
       <span v-else>A</span>
@@ -67,7 +63,7 @@ const props = defineProps<{
   model?: string;
   isUserMessage: boolean;
   status?: MessageStatus;
-  isStreaming?: boolean;
+  isMeStreaming?: boolean;
   messageId?: string;
 }>();
 
@@ -79,7 +75,7 @@ const isContentReady = ref(true) // 默认为true，历史消息直接显示
 
 // 判断是否为正在进行的新流式消息
 const isActiveStreaming = computed(() => {
-  return props.status === MessageStatus.STREAMING && props.isStreaming
+  return props.status === MessageStatus.STREAMING && props.isMeStreaming
 })
 
 // 标记是否已经初始化过动画
