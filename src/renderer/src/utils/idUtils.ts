@@ -93,7 +93,7 @@ export class IdGenerator {
       const timeHigh = parseInt(hex.substring(12, 16), 16) & 0x0fff
 
       const timestamp = (timeHigh << 32) + (timeMid << 16) + timeLow
-      const unixTimestamp = (timestamp - 0x01b21dd213814000n) / 10000n
+      const unixTimestamp = (BigInt(timestamp) - 0x01b21dd213814000n) / 10000n
 
       return new Date(Number(unixTimestamp))
     } catch {
