@@ -13,7 +13,6 @@ export const useConversationStore = defineStore('conversation', () => {
   const messageList = ref<Message[]>([])
   const messageStatus = ref<MessageStatus>(MessageStatus.FINISHED)
   const streamingMessageId = ref<string | null>(null)
-  const typingFinished = ref<boolean>(false)
 
   // 计算属性
   const sortedMessages = computed(() => {
@@ -88,6 +87,9 @@ export const useConversationStore = defineStore('conversation', () => {
 
   const createConversation = async (conversation: Conversation) => {
     conversations.value.push(conversation)
+    conversations.value.sort((c1, c2) => {
+      return c1.createdAt < c2.createdAt ? 1 : -1
+    })
     return await db.conversations.add(conversation)
   }
 
@@ -170,13 +172,6 @@ export const useConversationStore = defineStore('conversation', () => {
     })
   }
 
-  const onTypingComplete = (messageId: string) => {
-    // 如果完成的是当前流式消息，清除流式状态
-    if (streamingMessageId.value === messageId) {
-      streamingMessageId.value = null
-    }
-  }
-
   const clearConversation = async (conversationId: string) => {
     await db.messages.where('conversationId').equals(conversationId).delete()
     if (currentConversation.value?.id === conversationId) {
@@ -238,10 +233,6 @@ export const useConversationStore = defineStore('conversation', () => {
     }
   }
 
-  const setTypingFinished = (finished: boolean) => {
-    typingFinished.value = finished
-  }
-
   return {
     // State
     conversations,
@@ -249,7 +240,6 @@ export const useConversationStore = defineStore('conversation', () => {
     messageList,
     messageStatus,
     streamingMessageId,
-    typingFinished,
 
     // Computed
     sortedMessages,
@@ -262,10 +252,8 @@ export const useConversationStore = defineStore('conversation', () => {
     createMessage,
     createStreamingMessage,
     updateStreamingMessage,
-    onTypingComplete,
     clearConversation,
     clearCurrentConversation,
-    updateConversationTitleIfFirst,
-    setTypingFinished
+    updateConversationTitleIfFirst
   }
 })

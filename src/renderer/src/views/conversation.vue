@@ -63,8 +63,7 @@
             :content="message.content" :timestamp="message.createdAt"
             :is-user-message="message.type === MessageType.QUESTION"
             :model="conversationStore.currentConversation?.selectedModel" :status="message.status"
-            :is-streaming="conversationStore.streamingMessageId === message.id" :message-id="message.id"
-            @typing-complete="conversationStore.onTypingComplete" />
+            :is-streaming="conversationStore.streamingMessageId === message.id" :message-id="message.id" />
         </div>
       </div>
     </div>
@@ -137,7 +136,6 @@
       </div>
     </div>
 
-    <!-- 输入框部分 - 优化设计和间距 -->
     <div class="chat-input-container">
       <div class="max-w-4xl mx-auto w-full px-6">
         <div class="message-input-wrapper">
@@ -151,9 +149,9 @@
               class="message-input" rows="1" ref="messageInputRef"></textarea>
 
             <button @click="handleSend" class="send-button"
-              :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING && !conversationStore.typingFinished">
+              :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING">
               <span
-                :class="conversationStore.messageStatus !== MessageStatus.STREAMING && !conversationStore.typingFinished ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
+                :class="conversationStore.messageStatus !== MessageStatus.STREAMING ? 'icon-[ri--send-plane-line]' : 'icon-[ic--twotone-motion-photos-pause]'"
                 class="w-5 h-5" />
             </button>
           </div>
@@ -414,6 +412,7 @@ watch(() => conversationStore.messageList.length, () => {
   letter-spacing: -0.025em;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

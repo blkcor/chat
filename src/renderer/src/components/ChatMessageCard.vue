@@ -15,10 +15,6 @@
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
-        <div v-else-if="shouldShowTypewriter && content" class="typewriter-container">
-          <TypewriterText :text="content" :speed="10" :is-complete="status === MessageStatus.FINISHED"
-            @typing-complete="onTypingComplete" />
-        </div>
         <div v-else-if="content">
           <MarkdownMessage :content="content" />
         </div>
@@ -31,10 +27,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed } from 'vue';
 import { formatTime } from '../utils/dateUtils';
 import { MessageStatus } from '../types/message';
-import TypewriterText from './TypewriterText.vue';
 import MarkdownMessage from './MarkdownMessage.vue';
 
 const props = defineProps<{
@@ -47,56 +42,8 @@ const props = defineProps<{
   messageId?: string;
 }>();
 
-const isTypingComplete = ref(false)
-
 // 计算是否为加载状态
 const isLoading = computed(() => props.status === MessageStatus.LOADING)
-
-// 计算是否应该显示打字机效果 - 只在实时流式输出时显示
-const shouldShowTypewriter = computed(() => {
-  return props.isStreaming &&
-    (props.status === MessageStatus.STREAMING ||
-      (props.status === MessageStatus.FINISHED && !isTypingComplete.value)) &&
-    !props.isUserMessage &&
-    props.content.length > 0
-})
-
-
-// 当消息状态变化时重置打字完成状态
-watch(() => props.content, (newContent, oldContent) => {
-  if (props.status === MessageStatus.STREAMING && props.isStreaming) {
-    // 只有在内容真正变化时才重置
-    if (newContent !== oldContent && newContent.length > (oldContent?.length || 0)) {
-      isTypingComplete.value = false
-    }
-  }
-})
-
-// 当不再是流式状态时，立即完成打字
-watch(() => props.isStreaming, (newIsStreaming) => {
-  if (!newIsStreaming && props.status === MessageStatus.FINISHED) {
-    isTypingComplete.value = true
-  }
-})
-
-// 监听状态变化
-watch(() => props.status, (newStatus) => {
-  if (newStatus === MessageStatus.FINISHED && !props.isStreaming) {
-    isTypingComplete.value = true
-  }
-})
-
-const emit = defineEmits<{
-  'typing-complete': [messageId: string]
-}>()
-
-const onTypingComplete = () => {
-  isTypingComplete.value = true
-  // 通知父组件打字完成，传递消息ID
-  if (props.messageId) {
-    emit('typing-complete', props.messageId)
-  }
-}
 </script>
 
 <style scoped>
@@ -271,14 +218,7 @@ const onTypingComplete = () => {
   }
 }
 
-/* 打字机效果样式 */
-.typewriter-container {
-  position: relative;
-  display: block;
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
+
 
 
 /* 响应式设计 */
