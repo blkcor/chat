@@ -30,6 +30,12 @@ function createWindow(): void {
         const stream = await client.chat(
           {
             messages: [
+              // 系统提示词：确保所有回复都使用Markdown格式
+              {
+                role: 'assistant',
+                content:
+                  '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。'
+              },
               ...conversationHistory, // 包含历史对话
               {
                 role: 'user',
