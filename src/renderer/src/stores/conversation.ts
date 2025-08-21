@@ -14,6 +14,14 @@ export const useConversationStore = defineStore('conversation', () => {
   const messageStatus = ref<MessageStatus>(MessageStatus.FINISHED)
   const streamingMessageId = ref<string | null>(null)
 
+  // Buffer配置 - 更细腻的渲染控制
+  const BUFFER_SIZE = 50 // 减小buffer，更频繁更新
+  const RENDER_INTERVAL = 300 // 缩短间隔，更流畅
+  const TYPING_SPEED = 30 // 打字机速度(字符/秒)
+  
+  // 存储定时器引用
+  const renderTimers = new Map<string, NodeJS.Timeout>()
+
   // 计算属性
   const sortedMessages = computed(() => {
     return [...messageList.value].sort((a, b) => {
@@ -144,26 +152,83 @@ export const useConversationStore = defineStore('conversation', () => {
 
     const message = messageList.value[messageIndex]
 
-    // 累积内容但不立即渲染到UI
+    // 初始化缓存内容
     if (!message.pendingContent) {
       message.pendingContent = ''
     }
     message.pendingContent += content
-
+    
     console.log(`Accumulating message ${messageId} content length:`, message.pendingContent.length)
     message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
-    // 只有在结束时才更新实际显示的内容
+    // 渐进式打字机渲染
+    const typewriterRender = () => {
+      if (!message.pendingContent) return
+      
+      const targetLength = message.pendingContent.length
+      const currentLength = message.content.length
+      
+      if (currentLength < targetLength) {
+        // 每次渲染一定数量的字符，模拟自然打字
+        const charsToAdd = Math.min(Math.ceil((targetLength - currentLength) / 3), 20)
+        const newLength = currentLength + charsToAdd
+        message.content = message.pendingContent.substring(0, newLength)
+        
+        // 如果还有更多内容，继续渲染
+        if (newLength < targetLength && !isEnd) {
+          setTimeout(typewriterRender, 60 + Math.random() * 40) // 随机化间隔，更自然
+        }
+      }
+    }
+
     if (isEnd) {
-      message.content = message.pendingContent
-      delete message.pendingContent
+      // 结束时清除定时器并渲染所有内容
+      const timer = renderTimers.get(messageId)
+      if (timer) {
+        clearTimeout(timer)
+        renderTimers.delete(messageId)
+      }
+      
+      // 确保所有内容都被渲染
+      if (message.pendingContent) {
+        message.content = message.pendingContent
+        delete message.pendingContent
+      }
       message.status = MessageStatus.FINISHED
       messageStatus.value = MessageStatus.FINISHED
-
+      
       console.log(`Message ${messageId} finished, final content length:`, message.content.length)
     } else {
       message.status = MessageStatus.STREAMING
       messageStatus.value = MessageStatus.STREAMING
+      
+      // 检查是否应该开始渐进渲染
+      const bufferLength = message.pendingContent?.length || 0
+      const currentLength = message.content.length
+      
+      if (bufferLength - currentLength >= BUFFER_SIZE) {
+        // 清除之前的定时器
+        const existingTimer = renderTimers.get(messageId)
+        if (existingTimer) {
+          clearTimeout(existingTimer)
+        }
+        
+        // 开始渐进渲染
+        typewriterRender()
+      }
+      
+      // 设置兜底定时器，确保内容不会被遗漏
+      const existingTimer = renderTimers.get(messageId)
+      if (existingTimer) {
+        clearTimeout(existingTimer)
+      }
+      
+      const timer = setTimeout(() => {
+        typewriterRender()
+        renderTimers.delete(messageId)
+      }, RENDER_INTERVAL)
+      
+      renderTimers.set(messageId, timer)
     }
 
     // 异步更新数据库，不阻塞UI - 使用微任务队列
@@ -192,6 +257,10 @@ export const useConversationStore = defineStore('conversation', () => {
     messageList.value = []
     messageStatus.value = MessageStatus.FINISHED
     streamingMessageId.value = null
+    
+    // 清除所有定时器
+    renderTimers.forEach((timer) => clearTimeout(timer))
+    renderTimers.clear()
   }
 
   // 如果是对话的第一条消息，更新对话标题

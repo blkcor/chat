@@ -15,7 +15,10 @@
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
-        <div v-else-if="content" class="message-content-wrapper" :class="{ 'content-appear': isContentReady }">
+        <div v-else-if="content" class="message-content-wrapper" :class="{
+          'content-appear': isContentReady,
+          'content-finished': props.status === MessageStatus.FINISHED
+        }">
           <MarkdownMessage :content="content" />
         </div>
         <div v-else>
@@ -48,25 +51,29 @@ const isLoading = computed(() => props.status !== MessageStatus.FINISHED)
 // 内容准备状态 - 用于触发过渡动画
 const isContentReady = ref(false)
 
-// 监听内容变化，在内容完成时触发动画
+// 监听内容变化，在内容更新时触发动画
 watch(() => props.content, async (newContent, oldContent) => {
-  if (newContent && props.status === MessageStatus.FINISHED && !oldContent) {
-    // 内容从无到有且状态为完成时，延迟触发动画
-    await nextTick()
-    setTimeout(() => {
+  if (newContent && newContent !== oldContent) {
+    if (!isContentReady.value) {
+      // 首次显示内容时，稍微延迟以创建更好的视觉效果
+      await nextTick()
+      setTimeout(() => {
+        isContentReady.value = true
+      }, props.status === MessageStatus.FINISHED ? 100 : 50)
+    } else if (props.status === MessageStatus.STREAMING) {
+      // 流式消息已经在显示状态，保持显示
       isContentReady.value = true
-    }, 50)
-  } else if (newContent && !props.isStreaming) {
-    // 非流式消息直接显示
-    isContentReady.value = true
+    }
   }
 }, { immediate: true })
 
-// 监听状态变化，重置动画状态
-watch(() => props.status, (newStatus) => {
-  if (newStatus === MessageStatus.STREAMING) {
+// 监听状态变化，优化动画状态
+watch(() => props.status, (newStatus, oldStatus) => {
+  if (newStatus === MessageStatus.STREAMING && oldStatus !== MessageStatus.STREAMING) {
+    // 开始流式传输时重置状态
     isContentReady.value = false
   }
+  // 完成状态的改变会通过模板的class绑定自动处理
 })
 </script>
 
@@ -245,16 +252,57 @@ watch(() => props.status, (newStatus) => {
 
 
 
-/* 消息内容过渡动画 */
+/* 消息内容过渡动画 - 更自然的渐进效果 */
 .message-content-wrapper {
   opacity: 0;
-  transform: translateY(10px);
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(5px) scale(0.98);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top left;
+  overflow: hidden;
+  max-height: 0;
 }
 
 .message-content-wrapper.content-appear {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  max-height: 2000px;
+  /* 足够大的值 */
+}
+
+
+@keyframes cursor-blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 内容出现时的微妙缩放效果 */
+.message-content-wrapper.content-appear .markdown-content {
+  animation: content-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes content-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  60% {
+    opacity: 0.8;
+    transform: translateY(-2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 响应式设计 */
