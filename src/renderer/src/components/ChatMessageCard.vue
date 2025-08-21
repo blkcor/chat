@@ -15,7 +15,7 @@
           <span class="dot"></span>
           <span class="dot"></span>
         </div>
-        <div v-else-if="content">
+        <div v-else-if="content" class="message-content-wrapper" :class="{ 'content-appear': isContentReady }">
           <MarkdownMessage :content="content" />
         </div>
         <div v-else>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { formatTime } from '../utils/dateUtils';
 import { MessageStatus } from '../types/message';
 import MarkdownMessage from './MarkdownMessage.vue';
@@ -43,7 +43,31 @@ const props = defineProps<{
 }>();
 
 // 计算是否为加载状态
-const isLoading = computed(() => props.status === MessageStatus.LOADING)
+const isLoading = computed(() => props.status !== MessageStatus.FINISHED)
+
+// 内容准备状态 - 用于触发过渡动画
+const isContentReady = ref(false)
+
+// 监听内容变化，在内容完成时触发动画
+watch(() => props.content, async (newContent, oldContent) => {
+  if (newContent && props.status === MessageStatus.FINISHED && !oldContent) {
+    // 内容从无到有且状态为完成时，延迟触发动画
+    await nextTick()
+    setTimeout(() => {
+      isContentReady.value = true
+    }, 50)
+  } else if (newContent && !props.isStreaming) {
+    // 非流式消息直接显示
+    isContentReady.value = true
+  }
+}, { immediate: true })
+
+// 监听状态变化，重置动画状态
+watch(() => props.status, (newStatus) => {
+  if (newStatus === MessageStatus.STREAMING) {
+    isContentReady.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -220,6 +244,18 @@ const isLoading = computed(() => props.status === MessageStatus.LOADING)
 
 
 
+
+/* 消息内容过渡动画 */
+.message-content-wrapper {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.message-content-wrapper.content-appear {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* 响应式设计 */
 @media (max-width: 768px) {

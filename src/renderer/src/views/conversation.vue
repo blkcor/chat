@@ -42,17 +42,6 @@
         </div>
       </div>
 
-      <!-- 状态指示器 -->
-      <div class="conversation-status" v-if="conversationStore.messageStatus === MessageStatus.STREAMING">
-        <div class="status-indicator">
-          <div class="typing-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <span class="status-text">AI 正在思考中...</span>
-        </div>
-      </div>
     </div>
 
     <!-- 消息列表部分 - 优化间距和最大宽度 -->
@@ -882,5 +871,9 @@ watch(() => conversationStore.messageList.length, () => {
   .prompt-item {
     padding: 0.75rem;
   }
+}
+
+.status-text {
+  color: var(--text-primary)
 }
 </style>

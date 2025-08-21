@@ -125,7 +125,7 @@ export const useConversationStore = defineStore('conversation', () => {
       createdAt: answerTime,
       updatedAt: answerTime,
       type: MessageType.ANSWER,
-      status: MessageStatus.LOADING
+      status: MessageStatus.STREAMING
     }
 
     await db.messages.add(streamingMessage)
@@ -144,15 +144,23 @@ export const useConversationStore = defineStore('conversation', () => {
 
     const message = messageList.value[messageIndex]
 
-    // 立即更新UI状态 - 这是最重要的，不能被阻塞
-    message.content += content
-    console.log(`Updating message ${messageId} content length:`, message.content.length)
+    // 累积内容但不立即渲染到UI
+    if (!message.pendingContent) {
+      message.pendingContent = ''
+    }
+    message.pendingContent += content
+
+    console.log(`Accumulating message ${messageId} content length:`, message.pendingContent.length)
     message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
-    // 根据是否结束更新状态
+    // 只有在结束时才更新实际显示的内容
     if (isEnd) {
+      message.content = message.pendingContent
+      delete message.pendingContent
       message.status = MessageStatus.FINISHED
       messageStatus.value = MessageStatus.FINISHED
+
+      console.log(`Message ${messageId} finished, final content length:`, message.content.length)
     } else {
       message.status = MessageStatus.STREAMING
       messageStatus.value = MessageStatus.STREAMING

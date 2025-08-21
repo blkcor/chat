@@ -4,7 +4,6 @@ export enum MessageType {
 }
 
 export enum MessageStatus {
-  LOADING,
   STREAMING,
   FINISHED
 }
@@ -17,4 +16,5 @@ export interface Message {
   conversationId: string
   createdAt: string
   updatedAt: string
+  pendingContent?: string
 }
