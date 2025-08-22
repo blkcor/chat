@@ -1,61 +1,61 @@
-import MarkdownIt from 'markdown-it'
-import Shiki from '@shikijs/markdown-it'
-import type { Token } from 'markdown-it'
-
-// 创建 markdown-it 实例
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true
-})
-
-// 先添加 Shiki 插件
-md.use(
-  await Shiki({
-    themes: {
-      light: 'vitesse-light',
-      dark: 'vitesse-dark'
-    },
-    defaultColor: false
-  })
-)
-
-// 在 Shiki 插件添加后，保存原始渲染器引用
-const originalFenceRenderer = md.renderer.rules.fence
-
-// 自定义围栏代码块渲染规则
-md.renderer.rules.fence = function (
-  tokens: Token[],
-  idx: number,
-  options: MarkdownIt.Options,
-  env: any,
-  self: MarkdownIt.Renderer
-) {
-  const token = tokens[idx]
-  const lang = token.info.trim() || 'text'
-  const code = token.content
-
-  // 使用 Shiki 渲染代码
-  const highlighted = originalFenceRenderer
-    ? originalFenceRenderer(tokens, idx, options, env, self)
-    : `<pre><code class="language-${lang}">${md.utils.escapeHtml(code)}</code></pre>`
-
-  return `
-    <div class="code-block-wrapper" data-code="${md.utils.escapeHtml(code)}">
-      <div class="code-block-header">
-        <span class="code-lang">${lang}</span>
-        <button class="copy-code-btn" title="复制代码">
-          <span class="icon-[ri--file-copy-line] w-4 h-4"></span>
-        </button>
-      </div>
-      <div class="shiki-wrapper">${highlighted}</div>
-    </div>
-  `
+interface WorkerMessage {
+  id: string
+  content: string
 }
 
-// 渲染 Markdown 内容
-export const renderMarkdown = (content: string): string => {
-  return md.render(content)
+interface WorkerResponse {
+  id: string
+  success: boolean
+  result?: string
+  error?: string
+}
+
+let worker: Worker | null = null
+let requestId = 0
+const pendingRequests = new Map<
+  string,
+  { resolve: (value: string) => void; reject: (error: Error) => void }
+>()
+
+const getWorker = () => {
+  if (!worker) {
+    worker = new Worker(new URL('../workers/markdown-worker.ts', import.meta.url), {
+      type: 'module'
+    })
+
+    worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+      const { id, success, result, error } = event.data
+      const request = pendingRequests.get(id)
+
+      if (request) {
+        pendingRequests.delete(id)
+        if (success && result) {
+          request.resolve(result)
+        } else {
+          request.reject(new Error(error || 'Markdown rendering failed'))
+        }
+      }
+    }
+
+    worker.onerror = (error) => {
+      console.error('Worker error:', error)
+      for (const [id, request] of pendingRequests) {
+        request.reject(new Error('Worker error occurred'))
+        pendingRequests.delete(id)
+      }
+    }
+  }
+  return worker
+}
+
+export const renderMarkdown = (content: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const id = `request-${++requestId}`
+    pendingRequests.set(id, { resolve, reject })
+
+    const worker = getWorker()
+    worker.postMessage({ id, content } as WorkerMessage)
+  })
 }
 
 // 复制代码函数

@@ -1,7 +1,7 @@
 <template>
   <div
     class="prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-800 dark:prose-p:text-gray-200 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-blue-500 prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-em:text-gray-600 dark:prose-em:text-gray-400"
-    v-html="renderedContent" @click="handleClick"></div>
+    @click="handleClick" v-html="renderedContent"></div>
 </template>
 
 <script setup lang="ts">
@@ -19,6 +19,7 @@ const renderContent = async () => {
   if (props.content) {
     try {
       renderedContent.value = await renderMarkdown(props.content)
+      console.log('renderedContent.value, ', renderedContent.value)
     } catch (error) {
       console.error('Markdown rendering error:', error)
       renderedContent.value = props.content
@@ -39,7 +40,9 @@ const handleClick = async (event: Event) => {
   if (target.classList.contains('copy-code-btn') || target.closest('.copy-code-btn')) {
     event.preventDefault()
 
-    const button = target.classList.contains('copy-code-btn') ? target : target.closest('.copy-code-btn') as HTMLElement
+    const button = target.classList.contains('copy-code-btn')
+      ? target
+      : (target.closest('.copy-code-btn') as HTMLElement)
     const codeWrapper = button.closest('.code-block-wrapper') as HTMLElement
 
     if (codeWrapper) {

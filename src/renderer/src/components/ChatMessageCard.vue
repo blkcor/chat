@@ -35,12 +35,9 @@
             :style="{ animationDelay: `${(i - 1) * 0.16}s`, animationDuration: '1.4s' }"></span>
         </div>
 
-        <div v-else-if="content"
+        <div v-else
           class="message-content-wrapper prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-800 dark:prose-p:text-gray-200 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-blue-500 prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300">
           <MarkdownMessage :content="content" />
-        </div>
-        <div v-else>
-          <slot>{{ content }}</slot>
         </div>
       </div>
     </div>

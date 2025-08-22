@@ -47,7 +47,6 @@ function createWindow(): void {
           model
         )
 
-        // 使用 setImmediate 避免阻塞主进程
         const processStream = async () => {
           try {
             for await (const chunk of stream as AsyncIterableIterator<any>) {
