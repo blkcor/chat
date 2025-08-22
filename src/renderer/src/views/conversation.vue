@@ -169,7 +169,7 @@ const router = useRouter()
 const messagesContainer = ref<HTMLElement>()
 const messageInputRef = ref<HTMLTextAreaElement>()
 
-// 预设prompt相关状态
+// 预prompt相关状态
 const showPromptPanel = ref(false)
 const selectedCategory = ref('coding')
 
@@ -317,6 +317,9 @@ const handleSend = async () => {
 
 
 onMounted(async () => {
+  if (messageInputRef.value) {
+    messageInputRef.value.focus()
+  }
   try {
     // 加载对话
     await conversationStore.loadConversation(convertsationId)
