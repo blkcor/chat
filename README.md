@@ -8,7 +8,6 @@ An Chat application.
 - [x] responsive conversation list while adding new conversation.
 - [x] typeWrite component cursor position. ==> remove the typewriter effect.
 - [x] auto focus to the input when opening a new conversation.
-- [ ] the end tag is based on both is_end and the typing finished.
 
 ## Feature ADD
 
