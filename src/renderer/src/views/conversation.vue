@@ -52,7 +52,8 @@
             :content="message.content" :timestamp="message.createdAt"
             :is-user-message="message.type === MessageType.QUESTION"
             :model="conversationStore.currentConversation?.selectedModel" :status="message.status"
-            :is-me-streaming="conversationStore.streamingMessageId === message.id" :message-id="message.id" />
+            :is-me-streaming="conversationStore.streamingMessageId === message.id" :message-id="message.id"
+            :rendered-content="message.renderedContent" />
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ export const db = new Dexie('chat') as Dexie & {
 db.version(1).stores({
   providers: 'id, name',
   conversations: 'id, providerId, createdAt, updatedAt',
-  messages: 'id, conversationId, createdAt, updatedAt, type'
+  messages: 'id, conversationId, createdAt, updatedAt, type, renderedContent'
 })
 
 export const initProvider = async () => {

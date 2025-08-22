@@ -7,19 +7,27 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { renderMarkdown, copyCodeToClipboard } from '@renderer/utils/markdown'
+import { MessageStatus } from '@renderer/types/message'
 
 const props = defineProps<{
   content: string
+  renderedContent?: string
+  status?: MessageStatus
 }>()
 
 const renderedContent = ref('')
 
-// 异步渲染 markdown
 const renderContent = async () => {
   if (props.content) {
     try {
+      // 如果有缓存的渲染内容且消息已完成，直接使用缓存
+      if (props.renderedContent && props.status === MessageStatus.FINISHED) {
+        renderedContent.value = props.renderedContent
+        return
+      }
+      
+      // 对于流式消息或没有缓存的消息，使用 web worker 渲染
       renderedContent.value = await renderMarkdown(props.content)
-      console.log('renderedContent.value, ', renderedContent.value)
     } catch (error) {
       console.error('Markdown rendering error:', error)
       renderedContent.value = props.content
@@ -29,8 +37,8 @@ const renderContent = async () => {
   }
 }
 
-// 监听内容变化
-watch(() => props.content, renderContent, { immediate: true })
+// 监听内容和状态变化
+watch([() => props.content, () => props.renderedContent, () => props.status], renderContent, { immediate: true })
 
 // 处理点击事件，特别是复制按钮
 const handleClick = async (event: Event) => {

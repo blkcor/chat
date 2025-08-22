@@ -17,4 +17,5 @@ export interface Message {
   createdAt: string
   updatedAt: string
   pendingContent?: string
+  renderedContent?: string
 }

@@ -5,6 +5,7 @@ import { Conversation } from '@renderer/types/conversation'
 import { Message, MessageStatus, MessageType } from '@renderer/types/message'
 import { generateMessageId } from '@renderer/utils/idUtils'
 import { formatDateTimeWithMs, nowWithMs } from '@renderer/utils/dateUtils'
+import { renderMarkdown } from '@renderer/utils/markdown'
 
 export const useConversationStore = defineStore('conversation', () => {
   // 状态
@@ -197,6 +198,9 @@ export const useConversationStore = defineStore('conversation', () => {
       messageStatus.value = MessageStatus.FINISHED
 
       console.log(`Message ${messageId} finished, final content length:`, message.content.length)
+
+      // 当消息完成时，异步渲染并缓存markdown内容
+      cacheRenderedContent(message)
     } else {
       message.status = MessageStatus.STREAMING
       messageStatus.value = MessageStatus.STREAMING
@@ -236,7 +240,8 @@ export const useConversationStore = defineStore('conversation', () => {
         .update(message.id, {
           content: message.content,
           updatedAt: message.updatedAt,
-          status: message.status
+          status: message.status,
+          renderedContent: message.renderedContent
         })
         .catch((error) => {
           console.error('Failed to update message in DB:', error)
@@ -306,6 +311,25 @@ export const useConversationStore = defineStore('conversation', () => {
       }
     } catch (error) {
       console.error('Failed to update conversation title:', error)
+    }
+  }
+
+  // 缓存渲染后的markdown内容
+  const cacheRenderedContent = async (message: Message) => {
+    try {
+      if (message.content && !message.renderedContent) {
+        const renderedContent = await renderMarkdown(message.content)
+        message.renderedContent = renderedContent
+
+        // 更新数据库
+        await db.messages.update(message.id, {
+          renderedContent
+        })
+
+        console.log(`Cached rendered content for message ${message.id}`)
+      }
+    } catch (error) {
+      console.error('Failed to cache rendered content:', error)
     }
   }
 
