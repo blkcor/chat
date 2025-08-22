@@ -3,7 +3,7 @@
     isUserMessage
       ? 'bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 flex-row-reverse text-right border-blue-200/50 dark:border-blue-700/30'
       : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
-    , 'hover:shadow-lg hover:-translate-y-0.5 shadow-sm'
+    , 'hover:shadow-lg shadow-sm'
   ]">
     <div
       class="w-11 h-11 rounded-xl flex items-center justify-center font-semibold text-sm flex-shrink-0 border-2 border-white dark:border-gray-900 transition-all duration-300"
@@ -37,11 +37,7 @@
 
         <div v-else
           class="message-content-wrapper prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-800 dark:prose-p:text-gray-200 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-blue-500 prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300">
-          <MarkdownMessage 
-            :content="content" 
-            :rendered-content="renderedContent"
-            :status="status" 
-          />
+          <MarkdownMessage :content="content" :rendered-content="renderedContent" :status="status" />
         </div>
       </div>
     </div>
