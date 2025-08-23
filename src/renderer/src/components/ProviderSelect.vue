@@ -48,10 +48,10 @@
 
         <SelectScrollUpButton
           class="flex items-center justify-center h-6 text-muted hover:text-primary transition-colors">
-          <span class="icon-[lucide--chevron-up] w-4 h-4"></span>
+          <span class="icon-[lucide--chevron-up] w-4 h-4" />
         </SelectScrollUpButton>
 
-        <SelectViewport class="p-2">
+        <SelectViewport class="p-2 max-h-[30vh] overflow-y-auto">
           <template v-for="(provider, pIndex) in providers" :key="provider.id">
             <!-- Provider 头 -->
             <SelectLabel class="px-3 py-1.5 text-xs font-semibold text-muted flex items-center gap-2">

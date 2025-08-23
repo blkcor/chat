@@ -4,6 +4,10 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { SendMessage, StreamableData } from '../types/message'
 import { ChatCompletion } from '@baiducloud/qianfan'
+import OpenAI from 'openai'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 function createWindow(): void {
   // Create the browser window.
@@ -97,6 +101,43 @@ function createWindow(): void {
           },
           messageId
         })
+      }
+    } else if (providerName === 'dashscope') {
+      const openai = new OpenAI({
+        apiKey: process.env.DASHSCOPE_API_KEY,
+        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+      })
+
+      const completion = await openai.chat.completions.create({
+        model,
+        messages: [
+          // 系统提示词：确保所有回复都使用Markdown格式
+          {
+            role: 'system',
+            content:
+              '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
+          },
+          ...conversationHistory, // 包含历史对话
+          {
+            role: 'user',
+            content
+          }
+        ],
+        stream: true
+      })
+
+      for await (const chunk of completion) {
+        const { choices } = chunk
+        const { delta } = choices[0]
+        const { content } = delta
+        const streamData: StreamableData = {
+          data: {
+            is_end: false,
+            result: content || ''
+          },
+          messageId
+        }
+        mainWindow.webContents.send('stream-message', streamData)
       }
     }
   })

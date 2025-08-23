@@ -29,6 +29,7 @@
     "@types/markdown-it": "^14.1.2",
     "dayjs": "^1.11.13",
     "dexie": "^4.0.11",
+    "dotenv": "^17.2.1",
     "electron-updater": "^6.3.9",
     "markdown-it": "^14.1.0",
     "markdown-it-async": "^2.2.0",

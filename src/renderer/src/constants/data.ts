@@ -1,6 +1,9 @@
 import { Provider } from '../types/provider'
-import { generateProviderId, generateConversationId } from '../utils/idUtils'
+import { generateProviderId } from '../utils/idUtils'
 import { now, subtractTime } from '../utils/dateUtils'
+import geminiIcon from '../assets/images/gemini.svg'
+import qianfanIcon from '../assets/images/qianfan.svg'
+import alibabaIcon from '../assets/images/alibaba.svg'
 
 export const providers: Array<Provider> = [
   // {
@@ -23,34 +26,34 @@ export const providers: Array<Provider> = [
   //   updatedAt: subtractTime(now(), 2, 'hour'),
   //   models: ['Claude-3.5-Sonnet', 'Claude-3-Opus', 'Claude-3-Haiku']
   // },
-  // {
-  //   id: v4(),
-  //   name: 'google',
-  //   title: 'Gemini',
-  //   desc: 'Google最新的多模态AI模型，支持文本、图像和代码理解。',
-  //   avatar: 'https://www.google.com/favicon.ico',
-  //   createdAt: subtractTime(now(), 20, 'day'),
-  //   updatedAt: subtractTime(now(), 3, 'hour'),
-  //   models: ['Gemini-Pro', 'Gemini-Ultra', 'Gemini-Nano']
-  // },
+  {
+    id: generateProviderId(),
+    name: 'google',
+    title: 'Gemini',
+    desc: 'Google最新的多模态AI模型，支持文本、图像和代码理解。',
+    avatar: geminiIcon,
+    createdAt: subtractTime(now(), 20, 'day'),
+    updatedAt: subtractTime(now(), 3, 'hour'),
+    models: ['Gemini-Pro', 'Gemini-Ultra', 'Gemini-Nano']
+  },
   {
     id: generateProviderId(),
     name: 'qianfan',
     title: '百度千帆',
     desc: '百度全知识增强的大语言模型，中文理解能力强。',
-    avatar: 'https://bce.bdstatic.com/img/favicon.ico',
+    avatar: qianfanIcon,
     createdAt: subtractTime(now(), 15, 'day'),
     updatedAt: subtractTime(now(), 1, 'hour'),
-    models: ['ERNIE-Speed-128K', 'ERNIE-Speed-8K', 'ERNIE-Lite-8K-0308', 'ERNIE-Tiny-8K']
+    models: ['ERNIE-Speed-128K']
   },
   {
     id: generateProviderId(),
     name: 'dashscope',
     title: '阿里灵积',
     desc: '阿里云推出的超大规模语言模型，具备多轮对话能力。',
-    avatar: 'https://img.alicdn.com/tfs/TB1_ZXuNcfpK1RjSZFOXXa6nFXa-32-32.ico',
+    avatar: alibabaIcon,
     createdAt: subtractTime(now(), 10, 'day'),
     updatedAt: subtractTime(now(), 30, 'minute'),
-    models: ['Qwen-Max', 'Qwen-Plus', 'Qwen-Turbo']
+    models: ['qwen-turbo', 'qwen-long', 'qwen-vl-plus', 'qwen-image']
   }
 ]

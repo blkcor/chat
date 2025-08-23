@@ -8,12 +8,9 @@ An Chat application.
 - [x] responsive conversation list while adding new conversation.
 - [x] typeWrite component cursor position. ==> remove the typewriter effect.
 - [x] auto focus to the input when opening a new conversation.
+- [ ] light mode chat message background color.
 
 ## Feature ADD
 
-- [ ] support more models.
-- [ ] support file upload.
-- [ ] support image recognize and answer based on that.
-- [ ] support mcp.
-- [ ] support ssr with a awesome new interreaction.
-- [ ] support user setting.
+- [ ] support read(file, image, video, audio)
+- [ ] support write(file, image, video, audio)
