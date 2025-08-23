@@ -8,7 +8,7 @@ An Chat application.
 - [x] responsive conversation list while adding new conversation.
 - [x] typeWrite component cursor position. ==> remove the typewriter effect.
 - [x] auto focus to the input when opening a new conversation.
-- [ ] light mode chat message background color.
+- [x] light mode chat message background color.
 
 ## Feature ADD
 

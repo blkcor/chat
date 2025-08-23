@@ -1,7 +1,6 @@
 <template>
-  <div
-    class="prose prose-sm max-w-none dark:prose-invert prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-800 dark:prose-p:text-gray-200 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-code:text-pink-600 dark:prose-code:text-pink-400 prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800 prose-blockquote:border-blue-500 prose-blockquote:text-gray-700 dark:prose-blockquote:text-gray-300 prose-strong:text-gray-900 dark:prose-strong:text-gray-100 prose-em:text-gray-600 dark:prose-em:text-gray-400"
-    @click="handleClick" v-html="renderedContent"></div>
+  <div class="text-[var(--text-primary)] prose prose-sm max-w-none dark:prose-invert " @click="handleClick"
+    v-html="localRenderedContent"></div>
 </template>
 
 <script setup lang="ts">
@@ -15,25 +14,25 @@ const props = defineProps<{
   status?: MessageStatus
 }>()
 
-const renderedContent = ref('')
+const localRenderedContent = ref('')
 
 const renderContent = async () => {
   if (props.content) {
     try {
       // 如果有缓存的渲染内容且消息已完成，直接使用缓存
       if (props.renderedContent && props.status === MessageStatus.FINISHED) {
-        renderedContent.value = props.renderedContent
+        localRenderedContent.value = props.renderedContent
         return
       }
-      
+
       // 对于流式消息或没有缓存的消息，使用 web worker 渲染
-      renderedContent.value = await renderMarkdown(props.content)
+      localRenderedContent.value = await renderMarkdown(props.content)
     } catch (error) {
       console.error('Markdown rendering error:', error)
-      renderedContent.value = props.content
+      localRenderedContent.value = props.content
     }
   } else {
-    renderedContent.value = ''
+    localRenderedContent.value = ''
   }
 }
 
