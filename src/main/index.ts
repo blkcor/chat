@@ -34,7 +34,7 @@ function createWindow(): void {
               {
                 role: 'assistant',
                 content:
-                  '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。'
+                  '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
               },
               ...conversationHistory, // 包含历史对话
               {

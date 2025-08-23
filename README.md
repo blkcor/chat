@@ -16,3 +16,4 @@ An Chat application.
 - [ ] support image recognize and answer based on that.
 - [ ] support mcp.
 - [ ] support ssr with a awesome new interreaction.
+- [ ] support user setting.
