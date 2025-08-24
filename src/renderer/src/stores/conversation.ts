@@ -6,6 +6,7 @@ import { Message, MessageStatus, MessageType } from '@renderer/types/message'
 import { generateMessageId } from '@renderer/utils/idUtils'
 import { formatDateTimeWithMs, nowWithMs } from '@renderer/utils/dateUtils'
 import { renderMarkdown } from '@renderer/utils/markdown'
+import { Provider } from '@renderer/types/provider'
 
 export const useConversationStore = defineStore('conversation', () => {
   // 状态
@@ -14,6 +15,7 @@ export const useConversationStore = defineStore('conversation', () => {
   const messageList = ref<Message[]>([])
   const messageStatus = ref<MessageStatus>(MessageStatus.FINISHED)
   const streamingMessageId = ref<string | null>(null)
+  const providers = ref<Provider[]>([])
 
   // Buffer配置 - 更细腻的渲染控制
   const BUFFER_SIZE = 50 // 减小buffer，更频繁更新
@@ -101,7 +103,7 @@ export const useConversationStore = defineStore('conversation', () => {
     return await db.conversations.add(conversation)
   }
 
-  const createMessage = async (content: string, conversationId: string): Promise<Message> => {
+  const createMessage = async (content: string, conversationId: string, files?: Array<{ id: string; name: string; size: number; type: string }>): Promise<Message> => {
     const questionTime = formatDateTimeWithMs(nowWithMs())
     const questionMessage: Message = {
       id: generateMessageId(),
@@ -109,7 +111,8 @@ export const useConversationStore = defineStore('conversation', () => {
       content,
       createdAt: questionTime,
       updatedAt: questionTime,
-      type: MessageType.QUESTION
+      type: MessageType.QUESTION,
+      files: files || [] // 添加文件信息
     }
 
     await db.messages.add(questionMessage)
@@ -158,14 +161,17 @@ export const useConversationStore = defineStore('conversation', () => {
       if (!message.pendingContent) {
         message.pendingContent = ''
       }
-      
+
       // Only append if the new content is not already at the end of pendingContent
       if (!message.pendingContent.endsWith(content)) {
         message.pendingContent += content
       }
     }
 
-    console.log(`Accumulating message ${messageId} content length:`, message.pendingContent?.length || 0)
+    console.log(
+      `Accumulating message ${messageId} content length:`,
+      message.pendingContent?.length || 0
+    )
     message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
     // 渐进式打字机渲染
@@ -340,6 +346,10 @@ export const useConversationStore = defineStore('conversation', () => {
     }
   }
 
+  const setProviders = (providerList: Provider[]) => {
+    providers.value = providerList
+  }
+
   return {
     // State
     conversations,
@@ -347,6 +357,7 @@ export const useConversationStore = defineStore('conversation', () => {
     messageList,
     messageStatus,
     streamingMessageId,
+    providers,
 
     // Computed
     sortedMessages,
@@ -361,6 +372,7 @@ export const useConversationStore = defineStore('conversation', () => {
     updateStreamingMessage,
     clearConversation,
     clearCurrentConversation,
-    updateConversationTitleIfFirst
+    updateConversationTitleIfFirst,
+    setProviders
   }
 })

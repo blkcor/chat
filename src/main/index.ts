@@ -4,9 +4,15 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { SendMessage, StreamableData } from '../types/message'
 import dotenv from 'dotenv'
-import { providerConfigs, getProviderApiKey } from './constants/providerConfig'
+import { providerConfigs, getProviderApiKey, uploadFileToLLM } from './constants/providerConfig'
 
 dotenv.config()
+
+// 检查模型是否支持文档解析
+function supportsDocumentParsing(model: string): boolean {
+  // 目前只有qwen-long支持文档解析
+  return model === 'qwen-long'
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -24,7 +30,7 @@ function createWindow(): void {
   })
 
   ipcMain.on('send-question', async (_event, data: SendMessage) => {
-    const { content, providerName, model, messageId, conversationHistory = [] } = data
+    const { content, providerName, model, messageId, conversationHistory = [], files = [] } = data
 
     // Get provider configuration
     const providerConfig = providerConfigs[providerName]
@@ -54,19 +60,59 @@ function createWindow(): void {
 
       console.log(`Using ${providerName} with model: ${model}`)
 
+      // 准备消息列表
+      let messages: any[] = [
+        {
+          role: 'system',
+          content: providerConfig.systemPrompt
+        },
+        ...conversationHistory
+      ]
+
+      // 处理文档解析功能（仅对支持的模型）
+      if (files.length > 0 && supportsDocumentParsing(model)) {
+        
+        console.log(`Processing ${files.length} files for document parsing`)
+        
+        // 上传文件并获取file IDs
+        const fileIds: string[] = []
+        for (const file of files) {
+          try {
+            const fileBuffer = Buffer.from(file.buffer)
+            const fileId = await uploadFileToLLM(openai, fileBuffer, file.name)
+            fileIds.push(fileId)
+            console.log(`Uploaded file: ${file.name} -> ${fileId}`)
+          } catch (error) {
+            console.error(`Failed to upload file ${file.name}:`, error)
+            mainWindow.webContents.send('stream-message', {
+              data: { is_end: true, result: `Failed to upload file: ${file.name}` },
+              messageId
+            })
+            return
+          }
+        }
+
+        // 修改系统消息以包含文件ID
+        if (fileIds.length > 0) {
+          const fileIdContent = fileIds.map(id => `fileid://${id}`).join('\n')
+          messages[0] = {
+            role: 'system',
+            content: fileIdContent
+          }
+        }
+      }
+
+      // 添加用户消息
+      messages.push({
+        role: 'user',
+        content
+      })
+
+      console.log('Messages to send:', messages.map(m => ({ role: m.role, content: m.content.substring(0, 100) + '...' })))
+
       const completion = await openai.chat.completions.create({
         model,
-        messages: [
-          {
-            role: 'system',
-            content: providerConfig.systemPrompt
-          },
-          ...conversationHistory,
-          {
-            role: 'user',
-            content
-          }
-        ],
+        messages,
         stream: true
       })
 
@@ -90,7 +136,7 @@ function createWindow(): void {
       mainWindow.webContents.send('stream-message', {
         data: {
           is_end: true,
-          result: ''
+          result: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
         },
         messageId
       })

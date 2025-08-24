@@ -12,5 +12,6 @@ An Chat application.
 
 ## Feature ADD
 
+- [ ] support file preview component
 - [ ] support read(file, image, video, audio)
 - [ ] support write(file, image, video, audio)

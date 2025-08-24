@@ -8,6 +8,14 @@ export enum MessageStatus {
   FINISHED
 }
 
+// 消息中的文件信息（用于显示）
+export interface MessageFile {
+  id: string
+  name: string
+  size: number
+  type: string // image, pdf, word, text, etc.
+}
+
 export interface Message {
   id: string
   content: string
@@ -18,4 +26,5 @@ export interface Message {
   updatedAt: string
   pendingContent?: string
   renderedContent?: string
+  files?: MessageFile[] // 添加文件信息
 }

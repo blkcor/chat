@@ -53,7 +53,7 @@
             :is-user-message="message.type === MessageType.QUESTION"
             :model="conversationStore.currentConversation?.selectedModel" :status="message.status"
             :is-me-streaming="conversationStore.streamingMessageId === message.id" :message-id="message.id"
-            :rendered-content="message.renderedContent" />
+            :rendered-content="message.renderedContent" :files="message.files" />
         </div>
       </div>
     </div>
@@ -128,6 +128,38 @@
 
     <div class="chat-input-container">
       <div class="max-w-4xl mx-auto w-full px-6">
+        <!-- 文件预览区域 -->
+        <div v-if="uploadedFiles.length > 0" class="file-preview-area">
+          <div class="file-preview-list">
+            <div v-for="file in uploadedFiles" :key="file.id" class="file-preview-item">
+              <!-- 文件类型图标 -->
+              <div class="file-icon">
+                <span v-if="file.type === 'image'" class="icon-[ri--image-line] w-3.5 h-3.5 text-blue-500"></span>
+                <span v-else-if="file.type === 'pdf'" class="icon-[ri--file-pdf-line] w-3.5 h-3.5 text-red-500"></span>
+                <span v-else-if="file.type === 'word'"
+                  class="icon-[ri--file-word-line] w-3.5 h-3.5 text-blue-600"></span>
+                <span v-else-if="file.type === 'markdown'"
+                  class="icon-[ri--markdown-line] w-3.5 h-3.5 text-gray-600"></span>
+                <span v-else-if="file.type === 'text'"
+                  class="icon-[ri--file-text-line] w-3.5 h-3.5 text-green-600"></span>
+                <span v-else-if="file.type === 'audio'"
+                  class="icon-[ri--music-line] w-3.5 h-3.5 text-purple-500"></span>
+                <span v-else-if="file.type === 'video'" class="icon-[ri--video-line] w-3.5 h-3.5 text-pink-500"></span>
+                <span v-else class="icon-[ri--file-line] w-3.5 h-3.5 text-gray-500"></span>
+              </div>
+
+              <div class="file-info">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">{{ formatFileSize(file.size) }}</span>
+              </div>
+
+              <button @click="removeFile(file.id)" class="remove-btn" title="移除文件">
+                <span class="icon-[ri--close-line] w-3 h-3"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="message-input-wrapper">
           <div class="message-input-card">
             <!-- 预设prompt按钮 -->
@@ -135,11 +167,21 @@
               <span class="icon-[ri--magic-line] w-4 h-4"></span>
             </button>
 
-            <textarea placeholder="输入消息..." @keydown="handleKeyDown" 
-              @compositionstart="handleCompositionStart" 
-              @compositionend="handleCompositionEnd"
-              v-model="messageContent"
-              class="message-input" rows="1" ref="messageInputRef"></textarea>
+            <!-- 文件上传按钮 -->
+            <button @click="handleFileUploadClick" class="prompt-btn" :class="{ 'has-files': uploadedFiles.length > 0 }"
+              :disabled="!hasAnyFileSupport"
+              :title="!hasAnyFileSupport ? '当前模型不支持文件上传' : (uploadedFiles.length > 0 ? `已选择 ${uploadedFiles.length} 个文件` : '添加文件')">
+              <span class="icon-[ri--attachment-2] w-4 h-4"></span>
+              <span v-if="uploadedFiles.length > 0" class="file-count">{{ uploadedFiles.length }}</span>
+            </button>
+
+            <!-- 隐藏的文件输入 -->
+            <input ref="fileInputRef" type="file" multiple :accept="acceptedTypes" @change="handleFileSelect"
+              style="display: none" />
+
+            <textarea placeholder="输入消息..." @keydown="handleKeyDown" @compositionstart="handleCompositionStart"
+              @compositionend="handleCompositionEnd" v-model="messageContent" class="message-input" rows="1"
+              ref="messageInputRef"></textarea>
 
             <button @click="handleSend" class="send-button"
               :disabled="!messageContent.trim() && conversationStore.messageStatus !== MessageStatus.STREAMING">
@@ -156,7 +198,7 @@
 
 <script setup lang="ts">
 import ChatMessageCard from '../components/ChatMessageCard.vue'
-import { nextTick, onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch, computed } from 'vue';
 import { db } from '@renderer/stores/db';
 import { useRoute, useRouter } from 'vue-router';
 import { MessageStatus, MessageType } from '@renderer/types/message';
@@ -164,6 +206,7 @@ import { nowWithMs, getTimeAgo } from '@renderer/utils/dateUtils';
 import { StreamableData } from '@type/message';
 import { useConversationStore } from '@renderer/stores';
 import { promptTemplates, promptCategories, type PromptTemplate } from '@renderer/constants/prompts';
+import { providers } from '@renderer/constants/data';
 
 const route = useRoute()
 const convertsationId = route.params.id as string
@@ -171,6 +214,106 @@ const messageContent = ref<string>('')
 const router = useRouter()
 const messagesContainer = ref<HTMLElement>()
 const messageInputRef = ref<HTMLTextAreaElement>()
+const fileInputRef = ref<HTMLInputElement>()
+
+// 文件类型接口
+interface UploadedFile {
+  id: string
+  name: string
+  size: number
+  type: string
+  content?: string
+  file: File
+}
+
+// 文件上传相关状态
+const uploadedFiles = ref<UploadedFile[]>([])
+
+// 支持的文件类型
+const supportedTypes = {
+  'image/jpeg': 'image',
+  'image/png': 'image',
+  'image/gif': 'image',
+  'image/webp': 'image',
+  'image/svg+xml': 'image',
+  'application/pdf': 'pdf',
+  'application/msword': 'word',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'word',
+  'text/plain': 'text',
+  'text/markdown': 'markdown',
+  'text/csv': 'text',
+  'application/json': 'text',
+  'audio/mpeg': 'audio',
+  'audio/wav': 'audio',
+  'audio/ogg': 'audio',
+  'audio/mp4': 'audio',
+  'video/mp4': 'video',
+  'video/mpeg': 'video',
+  'video/quicktime': 'video',
+  'video/webm': 'video'
+}
+
+const acceptedTypes = computed(() => {
+  // 获取当前provider信息
+  const currentProvider = conversationStore.currentConversation?.providerId
+  if (!currentProvider) return Object.keys(supportedTypes).join(',')
+
+  // 从providers数据中找到当前provider
+  const provider = providers.find(p => p.id === currentProvider)
+  const currentModel = conversationStore.currentConversation?.selectedModel
+
+  if (!provider || !currentModel) return Object.keys(supportedTypes).join(',')
+
+  // 找到当前模型的配置
+  const modelConfig = provider.models.find(m => m.name === currentModel)
+  if (!modelConfig) return Object.keys(supportedTypes).join(',')
+
+  const allowedTypes = Object.values(supportedTypes).filter((fileType) => {
+    // 根据模型的capabilities过滤支持的文件类型
+    switch (fileType) {
+      case 'image':
+        return modelConfig.capabilities.image
+      case 'audio':
+        return modelConfig.capabilities.audio
+      case 'video':
+        return modelConfig.capabilities.video
+      case 'pdf':
+      case 'word':
+        return modelConfig.capabilities.document
+      case 'text':
+      case 'markdown':
+        return modelConfig.capabilities.text // 文本文件通常都支持
+      default:
+        return true
+    }
+  })
+
+  return allowedTypes.map(([mimeType]) => mimeType).join(',')
+})
+
+
+// 检查当前provider是否支持任何类型的文件上传
+const hasAnyFileSupport = computed(() => {
+  const currentProvider = conversationStore.currentConversation?.providerId
+  const currentModel = conversationStore.currentConversation?.selectedModel
+  if (!currentProvider || !currentModel) return false
+  const provider = conversationStore.providers.find(p => p.id === currentProvider)
+  if (!provider) return false
+
+  // 找到当前模型的配置
+  const modelConfig = provider.models.find(m => {
+    console.log(m.name === currentModel)
+    return m.name === currentModel
+  })
+
+  console.log(modelConfig)
+  if (!modelConfig) return false
+
+  // 检查当前模型是否支持任何类型的文件
+  const capabilities = modelConfig.capabilities
+  return capabilities.image || capabilities.audio || capabilities.video ||
+    capabilities.document
+})
 
 // 预prompt相关状态
 const showPromptPanel = ref(false)
@@ -247,6 +390,112 @@ const getPromptsByCategory = (category: string) => {
   return promptTemplates.filter(template => template.category === category)
 }
 
+// 文件上传处理函数
+const handleFileUploadClick = () => {
+  fileInputRef.value?.click()
+}
+
+const handleFileSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (!target.files) return
+
+  const files = Array.from(target.files)
+
+  for (const file of files) {
+    // 检查文件类型
+    const fileType = supportedTypes[file.type as keyof typeof supportedTypes]
+    if (!fileType) {
+      alert(`不支持的文件类型: ${file.type}`)
+      continue
+    }
+
+    // 检查文件大小 (10MB限制)
+    if (file.size > 10 * 1024 * 1024) {
+      alert(`文件过大: ${file.name} (最大支持10MB)`)
+      continue
+    }
+
+    // 创建文件对象
+    const uploadedFile: UploadedFile = {
+      id: generateId(),
+      name: file.name,
+      size: file.size,
+      type: fileType,
+      file
+    }
+
+    // 如果是文本文件，读取内容
+    if (fileType === 'text' || fileType === 'markdown') {
+      try {
+        const content = await readTextFile(file)
+        uploadedFile.content = content
+      } catch (error) {
+        console.error('读取文件内容失败:', error)
+        alert(`读取文件失败: ${file.name}`)
+        continue
+      }
+    }
+
+    uploadedFiles.value.push(uploadedFile)
+  }
+
+  // 清空input值，允许重复选择同一文件
+  target.value = ''
+}
+
+const removeFile = (fileId: string) => {
+  uploadedFiles.value = uploadedFiles.value.filter(file => file.id !== fileId)
+}
+
+const readTextFile = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      resolve(e.target?.result as string)
+    }
+    reader.onerror = (e) => {
+      reject(e)
+    }
+    reader.readAsText(file)
+  })
+}
+
+// 文件处理相关函数
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+}
+
+// 生成文件内容描述，用于发送给AI
+const generateFileContentPrompt = (): string => {
+  if (uploadedFiles.value.length === 0) return ''
+
+  let filePrompt = '\n\n以下是用户上传的文件内容：\n'
+
+  uploadedFiles.value.forEach((file, index) => {
+    filePrompt += `\n--- 文件 ${index + 1}: ${file.name} (${file.type}) ---\n`
+
+    if (file.content) {
+      // 文本文件直接包含内容
+      filePrompt += file.content
+    } else {
+      // 非文本文件显示基本信息
+      filePrompt += `[这是一个${file.type}文件，大小：${formatFileSize(file.size)}]`
+    }
+    filePrompt += '\n'
+  })
+
+  return filePrompt
+}
+
+const generateId = () => {
+  return Math.random().toString(36).substring(2, 11)
+}
 
 
 // 自动调整textarea高度
@@ -283,12 +532,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
     if (event.isComposing || (event.target as HTMLTextAreaElement).dataset.composing === 'true') {
       return
     }
-    
+
     // 如果是Shift+Enter，插入换行而不发送
     if (event.shiftKey) {
       return
     }
-    
+
     // 阻止默认的换行行为并发送消息
     event.preventDefault()
     handleSend()
@@ -298,17 +547,29 @@ const handleKeyDown = (event: KeyboardEvent) => {
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
 
-  const content = messageContent.value
+  // 组合消息内容：用户输入 + 文件内容
+  const userMessage = messageContent.value
+  const fileContent = generateFileContentPrompt()
+  const fullContent = userMessage + fileContent
+
   messageContent.value = ''
-  
+
   // 重置textarea高度
   nextTick(() => {
     adjustTextareaHeight()
   })
 
   try {
-    // 创建用户消息
-    const questionMessage = await conversationStore.createMessage(content, convertsationId)
+    // 准备要保存到消息中的文件信息
+    const messageFiles = uploadedFiles.value.map(file => ({
+      id: file.id,
+      name: file.name,
+      size: file.size,
+      type: file.type
+    }))
+
+    // 创建用户消息 - 只显示用户输入的部分，包含文件信息
+    await conversationStore.createMessage(userMessage, convertsationId, messageFiles)
 
     // 滚动到底部显示新消息
     scrollToBottom()
@@ -337,17 +598,41 @@ const handleSend = async () => {
 
     console.log('Sending conversation history:', conversationHistory)
 
-    // 发送消息到主进程
+    // 准备文件数据（仅支持文档解析的文件）
+    const filesForLLM: { id: string, name: string, type: string, size: number, buffer: ArrayBuffer }[] = []
+    for (const file of uploadedFiles.value) {
+      if (['pdf', 'word'].includes(file.type)) {
+        try {
+          const arrayBuffer = await file.file.arrayBuffer()
+          filesForLLM.push({
+            id: file.id,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            buffer: arrayBuffer
+          })
+        } catch (error) {
+          console.error('读取文件失败:', error)
+          alert(`读取文件失败: ${file.name}`)
+        }
+      }
+    }
+
+    // 发送消息到主进程 - 使用完整内容（包含文件内容）
     const sendData = {
-      content: questionMessage.content,
+      content: fullContent,
       providerName: providerInfo?.name || '',
       model: conversationStore.currentConversation?.selectedModel || '',
       messageId: streamingMessage.id,
-      conversationHistory // 包含对话历史
+      conversationHistory, // 包含对话历史
+      files: filesForLLM // 需要LLM解析的文件
     }
 
     console.log('Sending question to main process:', sendData)
     window.chatAPI.sendQuestion(sendData)
+
+    // 清空已上传的文件
+    uploadedFiles.value = []
   } catch (error) {
     console.error('Failed to send message:', error)
     alert('发送消息失败')
@@ -636,6 +921,110 @@ watch(() => conversationStore.messageList.length, () => {
   z-index: 10;
 }
 
+/* 文件预览区域样式 - 类似ChatGPT */
+.file-preview-area {
+  margin-bottom: 0.75rem;
+}
+
+.file-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.file-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  transition: all 0.15s ease;
+  max-width: 200px;
+}
+
+.file-preview-item:hover {
+  background: var(--bg-accent);
+  border-color: var(--color-primary);
+}
+
+.file-preview-item .file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.file-preview-item .file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.file-preview-item .file-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.file-preview-item .file-size {
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.file-preview-item .remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.file-preview-item .remove-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  opacity: 1;
+}
+
+/* 文件上传按钮样式 */
+.prompt-btn.has-files {
+  background: var(--bg-accent);
+  color: var(--color-primary);
+}
+
+.file-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+  font-size: 0.6rem;
+  font-weight: 600;
+  border-radius: 50%;
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+}
+
 .message-input-wrapper {
   position: relative;
 }
@@ -729,9 +1118,20 @@ watch(() => conversationStore.messageList.length, () => {
   margin-right: 0.5rem;
 }
 
-.prompt-btn:hover {
+.prompt-btn:hover:not(:disabled) {
   background: var(--bg-accent);
   color: var(--color-primary);
+}
+
+.prompt-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+
+.prompt-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-muted);
 }
 
 /* 将input改为textarea */

@@ -61,7 +61,7 @@
 
             <!-- 模型列表 -->
             <SelectGroup>
-              <SelectItem v-for="modelName in provider.models" :key="modelName" :value="`${provider.id}::${modelName}`"
+              <SelectItem v-for="model in provider.models" :key="model.name" :value="`${provider.id}::${model.name}`"
                 class="relative flex items-center h-9 px-3 rounded-lg cursor-pointer text-sm text-primary
                        outline-none transition-all duration-150
                        data-[highlighted]:bg-gradient-to-r data-[highlighted]:from-accent/20 data-[highlighted]:to-accent/5
@@ -69,7 +69,7 @@
                 <SelectItemIndicator class="absolute left-0 w-6 flex items-center justify-center text-accent">
                   <span class="icon-[lucide--check] w-4 h-4"></span>
                 </SelectItemIndicator>
-                <SelectItemText class="pl-5">{{ modelName }}</SelectItemText>
+                <SelectItemText class="pl-5">{{ model.name }}</SelectItemText>
               </SelectItem>
             </SelectGroup>
 

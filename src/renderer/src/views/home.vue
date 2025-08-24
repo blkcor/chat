@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center h-full gap-2">
-    <ProviderSelect v-model="modelValue" :providers="providers" />
+    <ProviderSelect v-model="modelValue" :providers="conversationStore.providers" />
     <button @click="handleStartChat" class="btn-primary cursor-pointer">开始对话吧!</button>
   </div>
 </template>
@@ -8,7 +8,6 @@
 <script setup lang="ts">
 import ProviderSelect from '@renderer/components/ProviderSelect.vue'
 import { db } from '@renderer/stores/db'
-import { Provider } from '@renderer/types/provider'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { generateConversationId } from '@renderer/utils/idUtils'
@@ -21,7 +20,6 @@ const modelValue = ref<{
   providerId: string,
   model: string
 } | null>(null)
-const providers = ref<Provider[]>([])
 const conversationStore = useConversationStore()
 
 const handleStartChat = async () => {
@@ -51,6 +49,7 @@ const handleStartChat = async () => {
 }
 
 onMounted(async () => {
-  providers.value = await db.providers.toArray()
+  const providers = await db.providers.toArray()
+  conversationStore.setProviders(providers)
 })
 </script>

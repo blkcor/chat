@@ -6,6 +6,12 @@ export interface MediaCapabilities {
   document: boolean // PDF, Word, MD, etc.
 }
 
+// 模型配置，包含该模型的能力
+export interface ModelConfig {
+  name: string
+  capabilities: MediaCapabilities
+}
+
 export interface ProviderConfig {
   apiKeyEnv: string // Environment variable name for API key
   baseURL: string
@@ -20,7 +26,6 @@ export interface Provider {
   avatar: string
   createdAt: string
   updatedAt: string
-  models: string[]
-  capabilities: MediaCapabilities
+  models: ModelConfig[] // 改为ModelConfig数组，每个模型有自己的capabilities
   config: ProviderConfig
 }

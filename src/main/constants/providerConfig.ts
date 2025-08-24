@@ -1,9 +1,34 @@
 import OpenAI from 'openai'
+import fs from 'fs'
+import path from 'path'
+import { tmpdir } from 'os'
 
 export interface ProviderHandler {
   createClient: (apiKey: string) => OpenAI
   baseURL: string
   systemPrompt: string
+}
+
+// 文件上传到LLM并获取file ID
+export async function uploadFileToLLM(client: OpenAI, fileBuffer: Buffer, fileName: string): Promise<string> {
+  // 将buffer写入临时文件
+  const tempFilePath = path.join(tmpdir(), `upload_${Date.now()}_${fileName}`)
+  fs.writeFileSync(tempFilePath, fileBuffer)
+  
+  try {
+    // 上传文件到LLM
+    const fileObject = await client.files.create({
+      file: fs.createReadStream(tempFilePath),
+      purpose: "file-extract" as any // 暂时使用any绕过类型检查，这是DashScope特有的purpose
+    })
+    
+    return fileObject.id
+  } finally {
+    // 清理临时文件
+    if (fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath)
+    }
+  }
 }
 
 export const providerConfigs: Record<string, ProviderHandler> = {

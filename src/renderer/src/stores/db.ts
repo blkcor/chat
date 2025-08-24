@@ -16,6 +16,13 @@ db.version(1).stores({
   messages: 'id, conversationId, createdAt, updatedAt, type, renderedContent'
 })
 
+// 版本2：为Message添加files字段支持
+db.version(2).stores({
+  providers: 'id, name',
+  conversations: 'id, providerId, createdAt, updatedAt',
+  messages: 'id, conversationId, createdAt, updatedAt, type, renderedContent, files'
+})
+
 export const initProvider = async () => {
   const count = await db.providers.count()
   if (count === 0) {
