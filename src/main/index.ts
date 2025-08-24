@@ -3,7 +3,6 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { SendMessage, StreamableData } from '../types/message'
-import { ChatCompletion } from '@baiducloud/qianfan'
 import OpenAI from 'openai'
 import dotenv from 'dotenv'
 
@@ -28,85 +27,13 @@ function createWindow(): void {
     const { content, providerName, model, messageId, conversationHistory = [] } = data
 
     if (providerName === 'qianfan') {
-      try {
-        const client = new ChatCompletion()
-
-        const stream = await client.chat(
-          {
-            messages: [
-              // 系统提示词：确保所有回复都使用Markdown格式
-              {
-                role: 'assistant',
-                content:
-                  '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
-              },
-              ...conversationHistory, // 包含历史对话
-              {
-                role: 'user',
-                content
-              }
-            ],
-            stream: true
-          },
-          model
-        )
-
-        const processStream = async () => {
-          try {
-            for await (const chunk of stream as AsyncIterableIterator<any>) {
-              const { is_end, result } = chunk
-              console.log('result: ', result)
-              // 确保 result 不为 undefined
-              const streamData: StreamableData = {
-                data: {
-                  is_end,
-                  result: result || ''
-                },
-                messageId
-              }
-
-              // 立即发送数据，不等待
-              mainWindow.webContents.send('stream-message', streamData)
-
-              // 如果是结束标志，跳出循环
-              if (is_end) {
-                break
-              }
-
-              // 让出控制权，避免阻塞 - 使用更短的延迟
-              await new Promise((resolve) => setTimeout(resolve, 1))
-            }
-          } catch (streamError) {
-            console.error('Stream processing error:', streamError)
-            // 发送错误结束信号
-            mainWindow.webContents.send('stream-message', {
-              data: {
-                is_end: true,
-                result: ''
-              },
-              messageId
-            })
-          }
-        }
-
-        // 异步处理流，不阻塞主进程
-        processStream()
-      } catch (error) {
-        console.error('Chat completion error:', error)
-        // 发送错误结束信号
-        mainWindow.webContents.send('stream-message', {
-          data: {
-            is_end: true,
-            result: ''
-          },
-          messageId
-        })
-      }
-    } else if (providerName === 'dashscope') {
       const openai = new OpenAI({
-        apiKey: process.env.DASHSCOPE_API_KEY,
-        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+        apiKey: process.env.QIANFAN_API_KEY,
+        baseURL: 'https://qianfan.baidubce.com/v2/'
       })
+
+      console.log('process.env.QIANFAN_API_KEY,,', process.env.QIANFAN_API_KEY)
+      console.log('choose model,', model)
 
       const completion = await openai.chat.completions.create({
         model,
@@ -138,6 +65,104 @@ function createWindow(): void {
           messageId
         }
         mainWindow.webContents.send('stream-message', streamData)
+      }
+    } else if (providerName === 'dashscope') {
+      try {
+        const openai = new OpenAI({
+          apiKey: process.env.DASHSCOPE_API_KEY,
+          baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+        })
+
+        const completion = await openai.chat.completions.create({
+          model,
+          messages: [
+            // 系统提示词：确保所有回复都使用Markdown格式
+            {
+              role: 'system',
+              content:
+                '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
+            },
+            ...conversationHistory, // 包含历史对话
+            {
+              role: 'user',
+              content
+            }
+          ],
+          stream: true
+        })
+
+        for await (const chunk of completion) {
+          const { choices } = chunk
+          const { delta, finish_reason } = choices[0]
+          const { content } = delta
+          const streamData: StreamableData = {
+            data: {
+              is_end: finish_reason ? true : false,
+              result: content || ''
+            },
+            messageId
+          }
+          mainWindow.webContents.send('stream-message', streamData)
+        }
+      } catch (error) {
+        console.error('DashScope completion error:', error)
+        // 发送错误结束信号
+        mainWindow.webContents.send('stream-message', {
+          data: {
+            is_end: true,
+            result: ''
+          },
+          messageId
+        })
+      }
+    } else if (providerName === 'google') {
+      try {
+        const openai = new OpenAI({
+          apiKey: process.env.GEMINI_API_KEY,
+          baseURL: 'https://api.aiproxy.io/google/v1beta/openai'
+        })
+
+        const response = await openai.chat.completions.create({
+          model,
+          messages: [
+            // 系统提示词：确保所有回复都使用Markdown格式
+            {
+              role: 'system',
+              content:
+                '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
+            },
+            ...conversationHistory, // 包含历史对话
+            {
+              role: 'user',
+              content
+            }
+          ],
+          stream: true
+        })
+
+        for await (const chunk of response) {
+          const { choices } = chunk
+          const { delta, finish_reason } = choices[0]
+          const { content } = delta
+          const streamData: StreamableData = {
+            data: {
+              is_end: finish_reason ? true : false,
+              result: content || ''
+            },
+            messageId
+          }
+          mainWindow.webContents.send('stream-message', streamData)
+        }
+      } catch (error) {
+        console.error('Gemini completion error:', error)
+        // 发送错误结束信号
+        mainWindow.webContents.send('stream-message', {
+          data: {
+            is_end: true,
+            result: ''
+          },
+          messageId
+        })
       }
     }
   })

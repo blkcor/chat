@@ -34,7 +34,7 @@ export const providers: Array<Provider> = [
     avatar: geminiIcon,
     createdAt: subtractTime(now(), 20, 'day'),
     updatedAt: subtractTime(now(), 3, 'hour'),
-    models: ['Gemini-Pro', 'Gemini-Ultra', 'Gemini-Nano']
+    models: ['gemini-2.5-flash']
   },
   {
     id: generateProviderId(),
@@ -44,7 +44,7 @@ export const providers: Array<Provider> = [
     avatar: qianfanIcon,
     createdAt: subtractTime(now(), 15, 'day'),
     updatedAt: subtractTime(now(), 1, 'hour'),
-    models: ['ERNIE-Speed-128K']
+    models: ['ernie-speed-128k']
   },
   {
     id: generateProviderId(),
