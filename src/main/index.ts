@@ -3,8 +3,8 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { SendMessage, StreamableData } from '../types/message'
-import OpenAI from 'openai'
 import dotenv from 'dotenv'
+import { providerConfigs, getProviderApiKey } from './constants/providerConfig'
 
 dotenv.config()
 
@@ -26,25 +26,42 @@ function createWindow(): void {
   ipcMain.on('send-question', async (_event, data: SendMessage) => {
     const { content, providerName, model, messageId, conversationHistory = [] } = data
 
-    if (providerName === 'qianfan') {
-      const openai = new OpenAI({
-        apiKey: process.env.QIANFAN_API_KEY,
-        baseURL: 'https://qianfan.baidubce.com/v2/'
+    // Get provider configuration
+    const providerConfig = providerConfigs[providerName]
+    if (!providerConfig) {
+      console.error(`Unsupported provider: ${providerName}`)
+      mainWindow.webContents.send('stream-message', {
+        data: { is_end: true, result: `Unsupported provider: ${providerName}` },
+        messageId
       })
+      return
+    }
 
-      console.log('process.env.QIANFAN_API_KEY,,', process.env.QIANFAN_API_KEY)
-      console.log('choose model,', model)
+    // Get API key
+    const apiKey = getProviderApiKey(providerName)
+    if (!apiKey) {
+      console.error(`API key not found for provider: ${providerName}`)
+      mainWindow.webContents.send('stream-message', {
+        data: { is_end: true, result: `API key not configured for ${providerName}` },
+        messageId
+      })
+      return
+    }
+
+    try {
+      // Create OpenAI client using provider configuration
+      const openai = providerConfig.createClient(apiKey)
+
+      console.log(`Using ${providerName} with model: ${model}`)
 
       const completion = await openai.chat.completions.create({
         model,
         messages: [
-          // 系统提示词：确保所有回复都使用Markdown格式
           {
             role: 'system',
-            content:
-              '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
+            content: providerConfig.systemPrompt
           },
-          ...conversationHistory, // 包含历史对话
+          ...conversationHistory,
           {
             role: 'user',
             content
@@ -57,6 +74,7 @@ function createWindow(): void {
         const { choices } = chunk
         const { delta, finish_reason } = choices[0]
         const { content } = delta
+        console.log('get content, ', content)
         const streamData: StreamableData = {
           data: {
             is_end: finish_reason ? true : false,
@@ -66,104 +84,16 @@ function createWindow(): void {
         }
         mainWindow.webContents.send('stream-message', streamData)
       }
-    } else if (providerName === 'dashscope') {
-      try {
-        const openai = new OpenAI({
-          apiKey: process.env.DASHSCOPE_API_KEY,
-          baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1'
-        })
-
-        const completion = await openai.chat.completions.create({
-          model,
-          messages: [
-            // 系统提示词：确保所有回复都使用Markdown格式
-            {
-              role: 'system',
-              content:
-                '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
-            },
-            ...conversationHistory, // 包含历史对话
-            {
-              role: 'user',
-              content
-            }
-          ],
-          stream: true
-        })
-
-        for await (const chunk of completion) {
-          const { choices } = chunk
-          const { delta, finish_reason } = choices[0]
-          const { content } = delta
-          const streamData: StreamableData = {
-            data: {
-              is_end: finish_reason ? true : false,
-              result: content || ''
-            },
-            messageId
-          }
-          mainWindow.webContents.send('stream-message', streamData)
-        }
-      } catch (error) {
-        console.error('DashScope completion error:', error)
-        // 发送错误结束信号
-        mainWindow.webContents.send('stream-message', {
-          data: {
-            is_end: true,
-            result: ''
-          },
-          messageId
-        })
-      }
-    } else if (providerName === 'google') {
-      try {
-        const openai = new OpenAI({
-          apiKey: process.env.GEMINI_API_KEY,
-          baseURL: 'https://api.aiproxy.io/google/v1beta/openai'
-        })
-
-        const response = await openai.chat.completions.create({
-          model,
-          messages: [
-            // 系统提示词：确保所有回复都使用Markdown格式
-            {
-              role: 'system',
-              content:
-                '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
-            },
-            ...conversationHistory, // 包含历史对话
-            {
-              role: 'user',
-              content
-            }
-          ],
-          stream: true
-        })
-
-        for await (const chunk of response) {
-          const { choices } = chunk
-          const { delta, finish_reason } = choices[0]
-          const { content } = delta
-          const streamData: StreamableData = {
-            data: {
-              is_end: finish_reason ? true : false,
-              result: content || ''
-            },
-            messageId
-          }
-          mainWindow.webContents.send('stream-message', streamData)
-        }
-      } catch (error) {
-        console.error('Gemini completion error:', error)
-        // 发送错误结束信号
-        mainWindow.webContents.send('stream-message', {
-          data: {
-            is_end: true,
-            result: ''
-          },
-          messageId
-        })
-      }
+    } catch (error) {
+      console.error(`${providerName} completion error:`, error)
+      // Send error end signal
+      mainWindow.webContents.send('stream-message', {
+        data: {
+          is_end: true,
+          result: ''
+        },
+        messageId
+      })
     }
   })
 

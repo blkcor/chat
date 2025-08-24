@@ -152,13 +152,20 @@ export const useConversationStore = defineStore('conversation', () => {
 
     const message = messageList.value[messageIndex]
 
-    // 初始化缓存内容
-    if (!message.pendingContent) {
-      message.pendingContent = ''
+    // Only add content if it's not empty and not already at the end of current content
+    if (content && content.trim()) {
+      // Initialize pendingContent if it doesn't exist
+      if (!message.pendingContent) {
+        message.pendingContent = ''
+      }
+      
+      // Only append if the new content is not already at the end of pendingContent
+      if (!message.pendingContent.endsWith(content)) {
+        message.pendingContent += content
+      }
     }
-    message.pendingContent += content
 
-    console.log(`Accumulating message ${messageId} content length:`, message.pendingContent.length)
+    console.log(`Accumulating message ${messageId} content length:`, message.pendingContent?.length || 0)
     message.updatedAt = formatDateTimeWithMs(nowWithMs())
 
     // 渐进式打字机渲染

@@ -5,6 +5,8 @@ import geminiIcon from '../assets/images/gemini.svg'
 import qianfanIcon from '../assets/images/qianfan.svg'
 import alibabaIcon from '../assets/images/alibaba.svg'
 
+const defaultSystemPrompt = '请始终使用Markdown格式回复。代码请用```代码块包围，列表使用-或数字编号，标题使用#标记，重要内容用**加粗**，链接用[文字](url)格式。但是在回复中不要携带任何相关的提示信息'
+
 export const providers: Array<Provider> = [
   // {
   //   id: v4(),
@@ -14,7 +16,19 @@ export const providers: Array<Provider> = [
   //   avatar: 'https://openai.com/favicon.ico',
   //   createdAt: subtractTime(now(), 30, 'day'),
   //   updatedAt: subtractTime(now(), 1, 'day'),
-  //   models: ['GPT-4o', 'GPT-4', 'GPT-3.5-turbo']
+  //   models: ['GPT-4o', 'GPT-4', 'GPT-3.5-turbo'],
+  //   capabilities: {
+  //     text: true,
+  //     image: true,
+  //     audio: false,
+  //     video: false,
+  //     document: false
+  //   },
+  //   config: {
+  //     apiKeyEnv: 'OPENAI_API_KEY',
+  //     baseURL: 'https://api.openai.com/v1',
+  //     systemPrompt: defaultSystemPrompt
+  //   }
   // },
   // {
   //   id: v4(),
@@ -24,7 +38,19 @@ export const providers: Array<Provider> = [
   //   avatar: 'https://www.anthropic.com/favicon.ico',
   //   createdAt: subtractTime(now(), 25, 'day'),
   //   updatedAt: subtractTime(now(), 2, 'hour'),
-  //   models: ['Claude-3.5-Sonnet', 'Claude-3-Opus', 'Claude-3-Haiku']
+  //   models: ['Claude-3.5-Sonnet', 'Claude-3-Opus', 'Claude-3-Haiku'],
+  //   capabilities: {
+  //     text: true,
+  //     image: true,
+  //     audio: false,
+  //     video: false,
+  //     document: true
+  //   },
+  //   config: {
+  //     apiKeyEnv: 'ANTHROPIC_API_KEY',
+  //     baseURL: 'https://api.anthropic.com',
+  //     systemPrompt: defaultSystemPrompt
+  //   }
   // },
   {
     id: generateProviderId(),
@@ -34,7 +60,19 @@ export const providers: Array<Provider> = [
     avatar: geminiIcon,
     createdAt: subtractTime(now(), 20, 'day'),
     updatedAt: subtractTime(now(), 3, 'hour'),
-    models: ['gemini-2.5-flash']
+    models: ['gemini-2.5-flash'],
+    capabilities: {
+      text: true,
+      image: true,
+      audio: false,
+      video: true,
+      document: false
+    },
+    config: {
+      apiKeyEnv: 'GEMINI_API_KEY',
+      baseURL: 'https://api.aiproxy.io/google/v1beta/openai',
+      systemPrompt: defaultSystemPrompt
+    }
   },
   {
     id: generateProviderId(),
@@ -44,7 +82,19 @@ export const providers: Array<Provider> = [
     avatar: qianfanIcon,
     createdAt: subtractTime(now(), 15, 'day'),
     updatedAt: subtractTime(now(), 1, 'hour'),
-    models: ['ernie-speed-128k']
+    models: ['ernie-speed-128k'],
+    capabilities: {
+      text: true,
+      image: false,
+      audio: false,
+      video: false,
+      document: false
+    },
+    config: {
+      apiKeyEnv: 'QIANFAN_API_KEY',
+      baseURL: 'https://qianfan.baidubce.com/v2/',
+      systemPrompt: defaultSystemPrompt
+    }
   },
   {
     id: generateProviderId(),
@@ -54,6 +104,18 @@ export const providers: Array<Provider> = [
     avatar: alibabaIcon,
     createdAt: subtractTime(now(), 10, 'day'),
     updatedAt: subtractTime(now(), 30, 'minute'),
-    models: ['qwen-turbo', 'qwen-long', 'qwen-vl-plus', 'qwen-image']
+    models: ['qwen-turbo', 'qwen-long', 'qwen-vl-plus', 'qwen-image'],
+    capabilities: {
+      text: true,
+      image: true,
+      audio: false,
+      video: false,
+      document: true
+    },
+    config: {
+      apiKeyEnv: 'DASHSCOPE_API_KEY',
+      baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      systemPrompt: defaultSystemPrompt
+    }
   }
 ]
