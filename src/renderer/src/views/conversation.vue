@@ -135,7 +135,10 @@
               <span class="icon-[ri--magic-line] w-4 h-4"></span>
             </button>
 
-            <textarea placeholder="输入消息..." @keydown.enter.exact.prevent="handleSend" v-model="messageContent"
+            <textarea placeholder="输入消息..." @keydown="handleKeyDown" 
+              @compositionstart="handleCompositionStart" 
+              @compositionend="handleCompositionEnd"
+              v-model="messageContent"
               class="message-input" rows="1" ref="messageInputRef"></textarea>
 
             <button @click="handleSend" class="send-button"
@@ -261,11 +264,47 @@ watch(messageContent, () => {
   })
 })
 
+const handleCompositionStart = (event: CompositionEvent) => {
+  if (event.target) {
+    (event.target as HTMLTextAreaElement).dataset.composing = 'true'
+  }
+}
+
+const handleCompositionEnd = (event: CompositionEvent) => {
+  if (event.target) {
+    (event.target as HTMLTextAreaElement).dataset.composing = 'false'
+  }
+}
+
+const handleKeyDown = (event: KeyboardEvent) => {
+  // 检查是否按下Enter键
+  if (event.key === 'Enter') {
+    // 如果是中文输入法组合输入状态，不发送消息
+    if (event.isComposing || (event.target as HTMLTextAreaElement).dataset.composing === 'true') {
+      return
+    }
+    
+    // 如果是Shift+Enter，插入换行而不发送
+    if (event.shiftKey) {
+      return
+    }
+    
+    // 阻止默认的换行行为并发送消息
+    event.preventDefault()
+    handleSend()
+  }
+}
+
 const handleSend = async () => {
   if (messageContent.value.trim() === '') return
 
   const content = messageContent.value
   messageContent.value = ''
+  
+  // 重置textarea高度
+  nextTick(() => {
+    adjustTextareaHeight()
+  })
 
   try {
     // 创建用户消息
