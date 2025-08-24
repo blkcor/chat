@@ -1,5 +1,5 @@
 <template>
-  <div class="text-[var(--text-primary)] prose prose-sm max-w-none dark:prose-invert " @click="handleClick"
+  <div class="text-[var(--text-primary)] prose prose-sm max-w-none dark:prose-invert" @click="handleClick"
     v-html="localRenderedContent"></div>
 </template>
 
@@ -12,6 +12,7 @@ const props = defineProps<{
   content: string
   renderedContent?: string
   status?: MessageStatus
+  isUserMessage: boolean
 }>()
 
 const localRenderedContent = ref('')
@@ -25,6 +26,11 @@ const renderContent = async () => {
         return
       }
 
+      // 对于用户消息 不需要渲染
+      if (props.isUserMessage) {
+        localRenderedContent.value = props.content
+        return
+      }
       // 对于流式消息或没有缓存的消息，使用 web worker 渲染
       localRenderedContent.value = await renderMarkdown(props.content)
     } catch (error) {

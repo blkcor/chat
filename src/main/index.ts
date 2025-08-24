@@ -55,7 +55,7 @@ function createWindow(): void {
           try {
             for await (const chunk of stream as AsyncIterableIterator<any>) {
               const { is_end, result } = chunk
-
+              console.log('result: ', result)
               // 确保 result 不为 undefined
               const streamData: StreamableData = {
                 data: {
@@ -128,11 +128,11 @@ function createWindow(): void {
 
       for await (const chunk of completion) {
         const { choices } = chunk
-        const { delta } = choices[0]
+        const { delta, finish_reason } = choices[0]
         const { content } = delta
         const streamData: StreamableData = {
           data: {
-            is_end: false,
+            is_end: finish_reason ? true : false,
             result: content || ''
           },
           messageId

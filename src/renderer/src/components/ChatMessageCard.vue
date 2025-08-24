@@ -34,7 +34,8 @@
         </div>
 
         <div v-else class="message-content-wrapper prose prose-sm max-w-none dark:prose-invert">
-          <MarkdownMessage :content="content" :rendered-content="renderedContent" :status="status" />
+          <MarkdownMessage :content="content" :rendered-content="renderedContent" :status="status"
+            :is-user-message="isUserMessage" />
         </div>
       </div>
     </div>
