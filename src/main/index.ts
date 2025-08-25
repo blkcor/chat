@@ -8,11 +8,6 @@ import { providerConfigs, getProviderApiKey, uploadFileToLLM } from './constants
 
 dotenv.config()
 
-// 检查模型是否支持文档解析
-function supportsDocumentParsing(model: string): boolean {
-  // 目前只有qwen-long支持文档解析
-  return model === 'qwen-long'
-}
 
 function createWindow(): void {
   // Create the browser window.
@@ -70,7 +65,7 @@ function createWindow(): void {
       ]
 
       // 处理文档解析功能（仅对支持的模型）
-      if (files.length > 0 && supportsDocumentParsing(model)) {
+      if (files.length > 0) {
         console.log(`Processing ${files.length} files for document parsing`)
 
         // 上传文件并获取file IDs
