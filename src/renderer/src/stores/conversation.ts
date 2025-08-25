@@ -116,6 +116,7 @@ export const useConversationStore = defineStore('conversation', () => {
       createdAt: questionTime,
       updatedAt: questionTime,
       type: MessageType.QUESTION,
+      status: MessageStatus.FINISHED,
       files: files || [] // 添加文件信息
     }
 
