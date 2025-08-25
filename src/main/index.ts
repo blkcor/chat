@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { SendMessage, StreamableData } from '../types/message'
+import { ChatMessage, SendMessage, StreamableData } from '../types/message'
 import dotenv from 'dotenv'
 import { providerConfigs, getProviderApiKey, uploadFileToLLM } from './constants/providerConfig'
 
@@ -61,7 +61,7 @@ function createWindow(): void {
       console.log(`Using ${providerName} with model: ${model}`)
 
       // 准备消息列表
-      let messages: any[] = [
+      const messages: ChatMessage[] = [
         {
           role: 'system',
           content: providerConfig.systemPrompt
@@ -71,9 +71,8 @@ function createWindow(): void {
 
       // 处理文档解析功能（仅对支持的模型）
       if (files.length > 0 && supportsDocumentParsing(model)) {
-        
         console.log(`Processing ${files.length} files for document parsing`)
-        
+
         // 上传文件并获取file IDs
         const fileIds: string[] = []
         for (const file of files) {
@@ -94,7 +93,7 @@ function createWindow(): void {
 
         // 修改系统消息以包含文件ID
         if (fileIds.length > 0) {
-          const fileIdContent = fileIds.map(id => `fileid://${id}`).join('\n')
+          const fileIdContent = fileIds.map((id) => `fileid://${id}`).join('\n')
           messages[0] = {
             role: 'system',
             content: fileIdContent
@@ -108,7 +107,10 @@ function createWindow(): void {
         content
       })
 
-      console.log('Messages to send:', messages.map(m => ({ role: m.role, content: m.content.substring(0, 100) + '...' })))
+      console.log(
+        'Messages to send:',
+        messages.map((m) => ({ role: m.role, content: m.content.substring(0, 100) + '...' }))
+      )
 
       const completion = await openai.chat.completions.create({
         model,

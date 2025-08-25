@@ -103,7 +103,11 @@ export const useConversationStore = defineStore('conversation', () => {
     return await db.conversations.add(conversation)
   }
 
-  const createMessage = async (content: string, conversationId: string, files?: Array<{ id: string; name: string; size: number; type: string }>): Promise<Message> => {
+  const createMessage = async (
+    content: string,
+    conversationId: string,
+    files?: Array<{ id: string; name: string; size: number; type: string }>
+  ): Promise<Message> => {
     const questionTime = formatDateTimeWithMs(nowWithMs())
     const questionMessage: Message = {
       id: generateMessageId(),
@@ -155,17 +159,15 @@ export const useConversationStore = defineStore('conversation', () => {
 
     const message = messageList.value[messageIndex]
 
-    // Only add content if it's not empty and not already at the end of current content
-    if (content && content.trim()) {
+    // Only add content if it's not empty
+    if (content) {
       // Initialize pendingContent if it doesn't exist
       if (!message.pendingContent) {
         message.pendingContent = ''
       }
 
-      // Only append if the new content is not already at the end of pendingContent
-      if (!message.pendingContent.endsWith(content)) {
-        message.pendingContent += content
-      }
+      // Always append content for streaming messages since each chunk should be unique
+      message.pendingContent += content
     }
 
     console.log(
